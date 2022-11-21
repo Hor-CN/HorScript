@@ -20,6 +20,14 @@ public class Function {
         this.block = block;
     }
 
+    public List<TerminalNode> getParams() {
+        return params;
+    }
+
+    public ParseTree getBlock() {
+        return block;
+    }
+
     public ValueModel invoke(List<ValueModel> args, Map<String, Function> functions) {
         if (args.size() != this.params.size()) {
             throw new RuntimeException("非法函数调用");

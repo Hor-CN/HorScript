@@ -78,7 +78,7 @@ forStatement: FOR LBT IDENTIFIER (ASS expr)? op=(TO|IN) expr RBT OCBR blockSet C
 whileStatement: WHILE LBT expr RBT OCBR blockSet CCBR;
 
 /* lambda函数声明 */
-lambdaDef       : LBT (IDENTIFIER (COMMA IDENTIFIER)*)? RBT LAMBDA OCBR blockSet CCBR;
+lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;
 
 /* 函数 */
 functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() {}

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 作用域
+ * 函数作用域
  */
 public class Scope {
 

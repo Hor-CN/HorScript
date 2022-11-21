@@ -29,6 +29,18 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         this.functions = new HashMap<>(functions);
     }
 
+
+    // Lambda 函数声明 (a,b) => {}
+    @Override
+    public ValueModel visitLambdaDef(LambdaDefContext ctx) {
+        // 参数列表
+        List<TerminalNode> params = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
+        // 语句块
+        ParseTree block = ctx.blockSet();
+        Function function = new Function(scope,params,block);
+        return new ValueModel(function);
+    }
+
     // visitFunctionDecl 函数声明
     @Override
     public ValueModel visitFunctionDecl(FunctionDeclContext ctx) {
@@ -85,12 +97,23 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitAssignment(AssignmentContext ctx) {
         PrimitiveValueContext primitiveValueContext = ctx.anyObject().primitiveValue();
         ExprContext exprContext = ctx.anyObject().expr();
+        LambdaDefContext lambdaDefContext = ctx.anyObject().lambdaDef();
         ValueModel vm = new ValueModel();
         if (primitiveValueContext != null) {
-            vm.setValue(this.visit(primitiveValueContext).asOv());
+            vm = this.visit(primitiveValueContext);
         }
         if (exprContext !=null) {
-            vm.setValue(this.visit(exprContext).asOv());
+            vm = this.visit(exprContext);
+        }
+        if(lambdaDefContext != null) {
+            Function function = (Function) this.visit(lambdaDefContext).asOv();
+            String id = ctx.IDENTIFIER().getText() + function.getParams().size();
+            // 函数已经定义抛出异常
+            if (functions.get(id) != null) {
+                throw newParseException(ctx.start, "函数不可以重新定义");
+            }
+            functions.put(id, function);
+            return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
         scope.assign(id, vm);

@@ -1,12 +1,15 @@
-// Generated from D:/Application/JetBrains/IdeaProject/HorScrtip/src/main/antlr4\HorScriptLexer.g4 by ANTLR 4.10.1
+// Generated from java-escape by ANTLR 4.11.1
 package core;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.*;
 
-@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
+@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class HorScriptLexer extends Lexer {
 	static { RuntimeMetaData.checkVersion("4.11.1", RuntimeMetaData.VERSION); }
 
@@ -52,7 +55,7 @@ public class HorScriptLexer extends Lexer {
 			"'\\u771F'", "'\\u5047'", "'+'", "'-'", "'*'", "'/'", "'%'", "'('", "')'", 
 			"'&'", "'|'", "'!'", "'^'", "'<<'", "'>>'", "'>>>'", "'>'", "'<'", "'>='", 
 			"'<='", "'=='", "'!='", "'||'", "'&&'", "'@'", "','", "':'", "'='", "'.'", 
-			"'['", "']'", "'{'", "'}'", "'?'", "';'", "'->'"
+			"'['", "']'", "'{'", "'}'", "'?'", "';'", "'=>'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -286,7 +289,7 @@ public class HorScriptLexer extends Lexer {
 		"\u0000\u00f1\u00f2\u0005{\u0000\u0000\u00f2`\u0001\u0000\u0000\u0000\u00f3"+
 		"\u00f4\u0005}\u0000\u0000\u00f4b\u0001\u0000\u0000\u0000\u00f5\u00f6\u0005"+
 		"?\u0000\u0000\u00f6d\u0001\u0000\u0000\u0000\u00f7\u00f8\u0005;\u0000"+
-		"\u0000\u00f8f\u0001\u0000\u0000\u0000\u00f9\u00fa\u0005-\u0000\u0000\u00fa"+
+		"\u0000\u00f8f\u0001\u0000\u0000\u0000\u00f9\u00fa\u0005=\u0000\u0000\u00fa"+
 		"\u00fb\u0005>\u0000\u0000\u00fbh\u0001\u0000\u0000\u0000\u00fc\u0102\u0007"+
 		"\u0000\u0000\u0000\u00fd\u0101\b\u0001\u0000\u0000\u00fe\u00ff\u0005\\"+
 		"\u0000\u0000\u00ff\u0101\b\u0002\u0000\u0000\u0100\u00fd\u0001\u0000\u0000"+

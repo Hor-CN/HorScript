@@ -1,3 +1,5 @@
 /gradle/
 /build/
 /.gradle/
+/src/main/gen/
+/src/main/antlr4/hs/

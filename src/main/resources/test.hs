@@ -32,10 +32,15 @@ c = 132;
     打印(x);
 }
 a([1,2,3,"456"])
-*/
-
 函数 f(x) {
     返回 x;
 }
-
 打印(f(10))
+*/
+
+赋值 lambdaTest = (a,b) => {
+    打印("结果：",a, b)
+}
+
+lambdaTest("The lambda function"," was tested successfully!")
+
