@@ -158,24 +158,34 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitPrintFunctionCall(PrintFunctionCallContext ctx) {
         if (ctx.exprList() != null) {
-            StringBuffer sBuffer = new StringBuffer();
-            // 参数列表
-            for (ExprContext ex : ctx.exprList().expr()) {
-                ValueModel content = this.visit(ex);
-                if (content.isBoolean()) {
-                    content.setValue(content.asBoolean() ? '真' : '假');
-                }
-                if (content.isNull()) {
-                    content.setValue('空');
-                }
-                sBuffer.append(content.asString());
-            }
-            System.out.println(sBuffer);
+            System.out.print(printStr(ctx.exprList().expr()));
         }
-        System.out.println();
         return ValueModel.VOID;
     }
 
+    @Override
+    public ValueModel visitPrintlnFunctionCall(PrintlnFunctionCallContext ctx) {
+        if (ctx.exprList() != null) {
+            System.out.println(printStr(ctx.exprList().expr()));
+        }
+        return ValueModel.VOID;
+    }
+
+    private String printStr(List<ExprContext> ctx) {
+        StringBuffer sBuffer = new StringBuffer();
+        // 参数列表
+        for (ExprContext ex : ctx) {
+            ValueModel content = this.visit(ex);
+            if (content.isBoolean()) {
+                content.setValue(content.asBoolean() ? '真' : '假');
+            }
+            if (content.isNull()) {
+                content.setValue('空');
+            }
+            sBuffer.append(content.asString());
+        }
+        return sBuffer.toString();
+    }
 
     // STRING indexes?                 #stringValue    // 字符串 or 字符串[0]
     @Override

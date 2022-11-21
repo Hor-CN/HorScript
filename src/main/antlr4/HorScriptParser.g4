@@ -88,7 +88,8 @@ functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() 
 functionCall: IDENTIFIER LBT exprList? RBT #identifierFunctionCall; // xx()
 /* 内置函数 */
 systemFunction: PRINT LBT exprList RBT     #printFunctionCall
-              | ASSERT LBT expr RBT    #assertFunctionCall
-              | SIZE LBT anyObject RBT      #sizeFunctionCall
-              | INPUT LBT STRING? RBT     #inputFunctionCall
+              | PRINTLN LBT exprList RBT   #printlnFunctionCall
+              | ASSERT LBT expr RBT        #assertFunctionCall
+              | SIZE LBT anyObject RBT     #sizeFunctionCall
+              | INPUT LBT STRING? RBT      #inputFunctionCall
               ;

@@ -29,7 +29,7 @@
           <option name="outputDir" value="D:\Application\JetBrains\IdeaProject\HorScrtip\src\main\antlr4\hs" />
           <option name="libDir" value="" />
           <option name="encoding" value="utf-8" />
-          <option name="pkg" value="" />
+          <option name="pkg" value="core" />
           <option name="language" value="Java" />
           <option name="generateListener" value="false" />
           <option name="generateVisitor" value="true" />

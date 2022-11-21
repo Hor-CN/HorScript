@@ -1,6 +1,5 @@
 // Generated from java-escape by ANTLR 4.11.1
 package core;
-
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -276,6 +275,13 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPrintFunctionCall(HorScriptParser.PrintFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code printlnFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrintlnFunctionCall(HorScriptParser.PrintlnFunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code assertFunctionCall}
 	 * labeled alternative in {@link HorScriptParser#systemFunction}.

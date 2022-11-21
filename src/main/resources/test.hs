@@ -42,7 +42,7 @@ a([1,2,3,"456"])
 }
 
 lambdaTest("The lambda function"," was tested successfully!")
-*/
+
 赋值 i = 1;
 赋值 a = 1;
 
@@ -54,3 +54,5 @@ lambdaTest("The lambda function"," was tested successfully!")
     打印("第",i,"次","打印")
     i = i + 1;
 }判断循环(i <= 10)
+*/
+打印("123")打印("123")
