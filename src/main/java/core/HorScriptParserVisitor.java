@@ -245,6 +245,12 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitWhileStatement(HorScriptParser.WhileStatementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#doWhileStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDoWhileStatement(HorScriptParser.DoWhileStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#lambdaDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

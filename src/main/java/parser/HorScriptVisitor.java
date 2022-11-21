@@ -324,10 +324,22 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitWhileStatement(WhileStatementContext ctx) {
         while( this.visit(ctx.expr()).asBoolean() ) {
             ValueModel returnValue = this.visit(ctx.blockSet());
-            if (returnValue == ValueModel.VOID) {
+            if (returnValue != ValueModel.VOID) {
                 return returnValue;
             }
         }
+        return ValueModel.VOID;
+    }
+
+    //whileStatement do while判断循环
+    @Override
+    public ValueModel visitDoWhileStatement(DoWhileStatementContext ctx) {
+        do {
+            ValueModel returnValue = this.visit(ctx.blockSet());
+            if (returnValue != ValueModel.VOID) {
+                return returnValue;
+            }
+        }while (this.visit(ctx.expr()).asBoolean());
         return ValueModel.VOID;
     }
 

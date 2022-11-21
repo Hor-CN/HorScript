@@ -20,6 +20,7 @@ statement
  | ifStatement
  | forStatement
  | whileStatement
+ | doWhileStatement SEM?
  ;
 
 // 参数列表
@@ -76,6 +77,7 @@ forStatement: FOR LBT IDENTIFIER (ASS expr)? op=(TO|IN) expr RBT OCBR blockSet C
 
 /* 判断循环 */
 whileStatement: WHILE LBT expr RBT OCBR blockSet CCBR;
+doWhileStatement: DO OCBR blockSet CCBR WHILE LBT expr RBT;
 
 /* lambda函数声明 */
 lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;

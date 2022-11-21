@@ -36,11 +36,21 @@ a([1,2,3,"456"])
     返回 x;
 }
 打印(f(10))
-*/
 
 赋值 lambdaTest = (a,b) => {
     打印("结果：",a, b)
 }
 
 lambdaTest("The lambda function"," was tested successfully!")
+*/
+赋值 i = 1;
+赋值 a = 1;
 
+判断循环(a <= 10){
+   打印(a);
+   a = a + 1;
+}
+开始 {
+    打印("第",i,"次","打印")
+    i = i + 1;
+}判断循环(i <= 10)
