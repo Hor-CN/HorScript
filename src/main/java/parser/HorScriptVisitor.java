@@ -1,11 +1,11 @@
 package parser;
 
 import cn.hutool.core.util.NumberUtil;
-import domain.ValueModel;
-import exception.VisitorException;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
 import core.HorScriptParserBaseVisitor;
+import domain.ValueModel;
+import exception.VisitorException;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -29,6 +29,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         this.functions = new HashMap<>(functions);
     }
 
+//    @Override
+//    public ValueModel visitObjectValue(ObjectValueContext ctx) {
+//        List<ObjectKeyValueContext> objectKeyValueContexts = ctx.objectKeyValue();
+//
+//        return ValueModel.VOID;
+//
+//    }
 
     // Lambda 函数声明 (a,b) => {}
     @Override
@@ -37,7 +44,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         List<TerminalNode> params = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
         // 语句块
         ParseTree block = ctx.blockSet();
-        Function function = new Function(scope,params,block);
+        Function function = new Function(scope, params, block);
         return new ValueModel(function);
     }
 
@@ -63,12 +70,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         Function function;
         if ((function = functions.get(id)) != null) {
             List<ValueModel> args = new ArrayList<>(params.size());
-            for (ExprContext param: params) {
+            for (ExprContext param : params) {
                 args.add(this.visit(param));
             }
             return function.invoke(args, functions);
         }
-        throw newParseException(ctx.start,ctx.getText());
+        throw newParseException(ctx.start, ctx.getText());
     }
 
     // 语句块
@@ -76,10 +83,10 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitBlockSet(BlockSetContext ctx) {
         scope = new Scope(scope, false); // create new local scope
-        for (FunctionDeclContext fdx: ctx.functionDecl()) {
+        for (FunctionDeclContext fdx : ctx.functionDecl()) {
             this.visit(fdx);
         }
-        for (StatementContext sx: ctx.statement()) {
+        for (StatementContext sx : ctx.statement()) {
             this.visit(sx);
         }
         ExprContext ex;
@@ -95,17 +102,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // assignment SEM? // 赋值 xx = xx;
     @Override
     public ValueModel visitAssignment(AssignmentContext ctx) {
-        PrimitiveValueContext primitiveValueContext = ctx.anyObject().primitiveValue();
-        ExprContext exprContext = ctx.anyObject().expr();
         LambdaDefContext lambdaDefContext = ctx.anyObject().lambdaDef();
-        ValueModel vm = new ValueModel();
-        if (primitiveValueContext != null) {
-            vm = this.visit(primitiveValueContext);
+        ObjectValueContext objectValueContext = ctx.anyObject().objectValue();
+        if (objectValueContext != null) {
+            this.visit(objectValueContext);
+            return ValueModel.VOID;
         }
-        if (exprContext !=null) {
-            vm = this.visit(exprContext);
-        }
-        if(lambdaDefContext != null) {
+        if (lambdaDefContext != null) {
             Function function = (Function) this.visit(lambdaDefContext).asOv();
             String id = ctx.IDENTIFIER().getText() + function.getParams().size();
             // 函数已经定义抛出异常
@@ -116,26 +119,35 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
-        scope.assign(id, vm);
+        scope.assign(id, this.visit(ctx.anyObject()));
         return ValueModel.VOID;
     }
 
     @Override
     public ValueModel visitNoAssignment(NoAssignmentContext ctx) {
-        PrimitiveValueContext primitiveValueContext = ctx.anyObject().primitiveValue();
-        ExprContext exprContext = ctx.anyObject().expr();
-        ValueModel newVal = new ValueModel();
-        if (primitiveValueContext != null) {
-            newVal.setValue(this.visit(primitiveValueContext).asOv());
+
+        LambdaDefContext lambdaDefContext = ctx.anyObject().lambdaDef();
+        ObjectValueContext objectValueContext = ctx.anyObject().objectValue();
+        if (objectValueContext != null) {
+            this.visit(objectValueContext);
+            return ValueModel.VOID;
         }
-        if (exprContext !=null) {
-            newVal.setValue(this.visit(exprContext).asOv());
+        if (lambdaDefContext != null) {
+            Function function = (Function) this.visit(lambdaDefContext).asOv();
+            String id = ctx.IDENTIFIER().getText() + function.getParams().size();
+            // 函数已经定义抛出异常
+            if (functions.get(id) != null) {
+                throw newParseException(ctx.start, "函数不可以重新定义");
+            }
+            functions.put(id, function);
+            return ValueModel.VOID;
         }
+        ValueModel newVal = this.visit(ctx.anyObject());
         if (ctx.indexes() != null) {
             ValueModel val = scope.resolve(ctx.IDENTIFIER().getText());
             List<ExprContext> exps = ctx.indexes().expr();
             setAtIndex(ctx, exps, val, newVal);
-        }else {
+        } else {
             String id = ctx.IDENTIFIER().getText();
             scope.assign(id, newVal);
         }
@@ -243,7 +255,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitList(ListContext ctx) {
         List<ValueModel> list = new ArrayList<>();
         if (ctx.exprList() != null) {
-            for(ExprContext ex: ctx.exprList().expr()) {
+            for (ExprContext ex : ctx.exprList().expr()) {
                 list.add(this.visit(ex));
             }
         }
@@ -266,17 +278,17 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitIfStatement(IfStatementContext ctx) {
         // if ...
-        if(this.visit(ctx.ifStat().expr()).asBoolean()) {
+        if (this.visit(ctx.ifStat().expr()).asBoolean()) {
             return this.visit(ctx.ifStat().blockSet());
         }
         // else if ...
-        for(int i = 0; i < ctx.elseIfStat().size(); i++) {
-            if(this.visit(ctx.elseIfStat(i).expr()).asBoolean()) {
+        for (int i = 0; i < ctx.elseIfStat().size(); i++) {
+            if (this.visit(ctx.elseIfStat(i).expr()).asBoolean()) {
                 return this.visit(ctx.elseIfStat(i).blockSet());
             }
         }
         // else ...
-        if(ctx.elseStat() != null) {
+        if (ctx.elseStat() != null) {
             return this.visit(ctx.elseStat().blockSet());
         }
         return ValueModel.VOID;
@@ -285,29 +297,28 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     //forStatement for循环
     @Override
     public ValueModel visitForStatement(ForStatementContext ctx) {
-        ValueModel lhs,rhs;
-        if (ctx.expr(1) == null) {
-            rhs  = this.visit(ctx.expr(0));
+        ValueModel lhs, rhs;
+        if (ctx.anyObject(1) == null) {
+            rhs = this.visit(ctx.anyObject(0));
             lhs = new ValueModel(0);
-        }else {
-            lhs = this.visit(ctx.expr(0));
-            rhs = this.visit(ctx.expr(1));
+        } else {
+            lhs = this.visit(ctx.anyObject(0));
+            rhs = this.visit(ctx.anyObject(1));
         }
 
         switch (ctx.op.getType()) {
             case HorScriptLexer.IN:
                 try {
-                    if(rhs.isList()) {
-                        for(ValueModel val : rhs.asList()) {
+                    if (rhs.isList()) {
+                        for (ValueModel val : rhs.asList()) {
                             scope.assign(ctx.IDENTIFIER().getText(), new ValueModel(val.asT()));
                             ValueModel returnValue = this.visit(ctx.blockSet());
-                            if(returnValue != ValueModel.VOID) {
+                            if (returnValue != ValueModel.VOID) {
                                 return returnValue;
                             }
                         }
                     }
-                }
-                catch (NullPointerException npe) {
+                } catch (NullPointerException npe) {
                     throw newParseException(ctx.start, "错误的可迭代对象: " + ctx.getText());
 
                 }
@@ -315,10 +326,10 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             case HorScriptLexer.TO:
                 int start = lhs.asInt();
                 int stop = rhs.asInt();
-                for(int i = start; i <= stop; i++) {
+                for (int i = start; i <= stop; i++) {
                     scope.assign(ctx.IDENTIFIER().getText(), new ValueModel(i));
                     ValueModel returnValue = this.visit(ctx.blockSet());
-                    if(returnValue != ValueModel.VOID) {
+                    if (returnValue != ValueModel.VOID) {
                         return returnValue;
                     }
                 }
@@ -332,7 +343,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     //whileStatement 判断循环
     @Override
     public ValueModel visitWhileStatement(WhileStatementContext ctx) {
-        while( this.visit(ctx.expr()).asBoolean() ) {
+        while (this.visit(ctx.expr()).asBoolean()) {
             ValueModel returnValue = this.visit(ctx.blockSet());
             if (returnValue != ValueModel.VOID) {
                 return returnValue;
@@ -344,12 +355,16 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     //whileStatement do while判断循环
     @Override
     public ValueModel visitDoWhileStatement(DoWhileStatementContext ctx) {
-        do {
-            ValueModel returnValue = this.visit(ctx.blockSet());
-            if (returnValue != ValueModel.VOID) {
-                return returnValue;
-            }
-        }while (this.visit(ctx.expr()).asBoolean());
+        try {
+            do {
+                ValueModel returnValue = this.visit(ctx.blockSet());
+                if (returnValue != ValueModel.VOID) {
+                    return returnValue;
+                }
+            } while (this.visit(ctx.expr()).asBoolean());
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.expr().getText());
+        }
         return ValueModel.VOID;
     }
 
@@ -365,7 +380,6 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     }
 
 
-
     // prefix=( PLUS | MINUS | NOT) expr                          #unaryExpr // 一元运算 + - !
     @Override
     public ValueModel visitUnaryExpr(UnaryExprContext ctx) {
@@ -375,15 +389,15 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 return vm;
             case HorScriptLexer.MINUS:
                 if (!vm.isNumber()) {
-                    throw newParseException(ctx.start,"类型错误: " + ctx.getText());
+                    throw newParseException(ctx.start, "类型错误: " + ctx.getText());
                 }
-                return vm.setValue(NumberUtil.mul("-1",vm.asString()));
+                return vm.setValue(NumberUtil.mul("-1", vm.asString()));
             case HorScriptLexer.NOT:
                 if (vm.isNumber()) {
                     vm.setValue(vm.asInt() > 0);
                 }
-                if(!vm.isBoolean()) {
-                    throw newParseException(ctx.start,"类型错误: " + ctx.getText());
+                if (!vm.isBoolean()) {
+                    throw newParseException(ctx.start, "类型错误: " + ctx.getText());
                 }
                 return vm.setValue(!vm.asBoolean());
         }
@@ -393,28 +407,34 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // expr op=( MUL | DIV | MOD ) expr                    #dyadicExpr_A // 二元运算 优先级1st  * / %
     @Override
     public ValueModel visitDyadicExpr_A(DyadicExpr_AContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.MUL:
-                return mul(ctx);
-            case HorScriptLexer.DIV:
-                return div(ctx);
-            case HorScriptLexer.MOD:
-                return mod(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.MUL:
+                    return mul(ctx);
+                case HorScriptLexer.DIV:
+                    return div(ctx);
+                case HorScriptLexer.MOD:
+                    return mod(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
 
 
-
-
     // expr op=( PLUS | MINUS) expr          #dyadicExpr_B   // 二元运算优先级 2st + -
     @Override
     public ValueModel visitDyadicExpr_B(DyadicExpr_BContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.PLUS:
-                return plus(ctx);
-            case HorScriptLexer.MINUS:
-                return minus(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.PLUS:
+                    return plus(ctx);
+                case HorScriptLexer.MINUS:
+                    return minus(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
@@ -423,19 +443,23 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // expr op=( AND | OR | XOR | L_SHIFT | R_SHIFT | R_SHIFT2) expr #dyadicExpr_C   // 二元运算优先级
     @Override
     public ValueModel visitDyadicExpr_C(DyadicExpr_CContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.AND:
-                return and(ctx);
-            case HorScriptLexer.OR:
-                return or(ctx);
-            case HorScriptLexer.XOR:
-                return xor(ctx);
-            case HorScriptLexer.LSHIFT:
-                return l_shift(ctx);
-            case HorScriptLexer.RSHIFT:
-                return r_shift(ctx);
-            case HorScriptLexer.RSHIFT2:
-                return r_shift2(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.AND:
+                    return and(ctx);
+                case HorScriptLexer.OR:
+                    return or(ctx);
+                case HorScriptLexer.XOR:
+                    return xor(ctx);
+                case HorScriptLexer.LSHIFT:
+                    return l_shift(ctx);
+                case HorScriptLexer.RSHIFT:
+                    return r_shift(ctx);
+                case HorScriptLexer.RSHIFT2:
+                    return r_shift2(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
@@ -444,15 +468,19 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // expr op=( GTEquals | LTEquals | GT | LT ) expr             #dyadicExpr_D // 4st '>=' | '<=' | '>' | '<'
     @Override
     public ValueModel visitDyadicExpr_D(DyadicExpr_DContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.GTEquals:
-                return gt_equals(ctx);
-            case HorScriptLexer.LTEquals:
-                return lt_equals(ctx);
-            case HorScriptLexer.GT:
-                return gt(ctx);
-            case HorScriptLexer.LT:
-                return lt(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.GTEquals:
+                    return gt_equals(ctx);
+                case HorScriptLexer.LTEquals:
+                    return lt_equals(ctx);
+                case HorScriptLexer.GT:
+                    return gt(ctx);
+                case HorScriptLexer.LT:
+                    return lt(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
@@ -461,11 +489,15 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     //  expr op=( EQ | NE ) expr                                   #dyadicExpr_E // 5st '=='  '!='
     @Override
     public ValueModel visitDyadicExpr_E(DyadicExpr_EContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.EQ:
-                return eq(ctx);
-            case HorScriptLexer.NE:
-                return neq(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.EQ:
+                    return eq(ctx);
+                case HorScriptLexer.NE:
+                    return neq(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
@@ -473,11 +505,15 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // expr op=( SC_OR | SC_AND) expr                             #dyadicExpr_F  // 6st || &&
     @Override
     public ValueModel visitDyadicExpr_F(DyadicExpr_FContext ctx) {
-        switch (ctx.op.getType()) {
-            case HorScriptLexer.SC_OR:
-                return sc_or(ctx);
-            case HorScriptLexer.SC_AND:
-                return sc_and(ctx);
+        try {
+            switch (ctx.op.getType()) {
+                case HorScriptLexer.SC_OR:
+                    return sc_or(ctx);
+                case HorScriptLexer.SC_AND:
+                    return sc_and(ctx);
+            }
+        } catch (NullPointerException e) {
+            throw newParseException(ctx.start, "空指针异常: " + ctx.start.getText());
         }
         return ValueModel.VOID;
     }
@@ -500,25 +536,22 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitInExpr(InExprContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-
         if (rhs.isList()) {
-            for(ValueModel val: rhs.asList()) {
+            for (ValueModel val : rhs.asList()) {
                 if (val.equals(lhs)) {
                     return new ValueModel(true);
                 }
             }
             return new ValueModel(false);
         }
-        throw newParseException(ctx.start,"类型错误: " + ctx.getText() + " 解决方案：应为列表类型");
+        throw newParseException(ctx.start, "类型错误: " + ctx.getText() + " 解决方案：应为列表类型");
 
     }
 
     private ValueModel plus(DyadicExpr_BContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-        if (lhs.isNull() || rhs.isNull()) {
-            throw newParseException(ctx.start, "空指针异常");
-        }
+
         ValueModel res = new ValueModel();
 
         // number + number
@@ -534,14 +567,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         }
         // string + any
         return res.setValue(lhs.asString() + rhs.asString());
+
     }
 
     private ValueModel minus(DyadicExpr_BContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-        if (lhs.isNull() || rhs.isNull()) {
-            throw newParseException(ctx.start, "空指针异常");
-        }
+
         ValueModel res = new ValueModel();
 
         // number - number
@@ -555,41 +587,41 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             list.remove(rhs);
             return res.setValue(list);
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
     private ValueModel mul(DyadicExpr_AContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-        if (lhs.isNull() || rhs.isNull()) {
-            throw newParseException(ctx.start, "空指针异常");
-        }
+
         ValueModel vm = new ValueModel();
 
         // number * number
-        if(lhs.isNumber() && rhs.isNumber()) {
-            return vm.setValue(NumberUtil.mul(lhs.asString(),rhs.asString()));
+        if (lhs.isNumber() && rhs.isNumber()) {
+            return vm.setValue(NumberUtil.mul(lhs.asString(), rhs.asString()));
         }
 
         // string * number
-        if(lhs.isString() && rhs.isNumber()) {
+        if (lhs.isString() && rhs.isNumber()) {
             StringBuilder str = new StringBuilder();
             int stop = rhs.asDouble().intValue();
-            for(int i = 0; i < stop; i++) {
+            for (int i = 0; i < stop; i++) {
                 str.append(lhs.asString());
             }
             return vm.setValue(str.toString());
         }
 
         // list * number
-        if(lhs.isList() && rhs.isNumber()) {
+        if (lhs.isList() && rhs.isNumber()) {
             List<ValueModel> total = new ArrayList<>();
             int stop = rhs.asDouble().intValue();
-            for(int i = 0; i < stop; i++) {
+            for (int i = 0; i < stop; i++) {
                 total.addAll(lhs.asList());
             }
             return vm.setValue(total);
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -599,17 +631,20 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(NumberUtil.div(lhs.asString(),rhs.asString()));
+            return new ValueModel(NumberUtil.div(lhs.asString(), rhs.asString()));
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
     private ValueModel mod(DyadicExpr_AContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() % rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -617,9 +652,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel and(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() & rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -627,9 +664,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel or(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() | rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -637,9 +676,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel xor(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() ^ rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -648,9 +689,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel l_shift(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() << rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -659,18 +702,22 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel r_shift(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() >> rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
     private ValueModel r_shift2(DyadicExpr_CContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asLong() >>> rhs.asLong());
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -679,12 +726,14 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel gt_equals(DyadicExpr_DContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asDouble() >= rhs.asDouble());
         }
-        if(lhs.isString() && rhs.isString()) {
+        if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) >= 0);
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -692,13 +741,15 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel lt_equals(DyadicExpr_DContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asDouble() <= rhs.asDouble());
         }
-        if(lhs.isString() && rhs.isString()) {
+        if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) <= 0);
         }
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
+
     }
 
 
@@ -706,12 +757,14 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel gt(DyadicExpr_DContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asDouble() > rhs.asDouble());
         }
-        if(lhs.isString() && rhs.isString()) {
+        if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) > 0);
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -719,12 +772,14 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel lt(DyadicExpr_DContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && rhs.isNumber()) {
             return new ValueModel(lhs.asDouble() < rhs.asDouble());
         }
-        if(lhs.isString() && rhs.isString()) {
+        if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) < 0);
         }
+
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 
@@ -733,22 +788,19 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private ValueModel neq(DyadicExpr_EContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-        if (lhs.isNull() || rhs.isNull()) {
-            throw newParseException(ctx.start, "空指针异常");
-        }
+
         return new ValueModel(!lhs.equals(rhs));
+
     }
 
     // ==
     private ValueModel eq(DyadicExpr_EContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
-        if (lhs.isNull() || rhs.isNull()) {
-            throw newParseException(ctx.start, "空指针异常");
-        }
-        return new ValueModel(lhs.equals(rhs));
-    }
 
+        return new ValueModel(lhs.equals(rhs));
+
+    }
 
 
     // ||
@@ -764,18 +816,21 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             rhs.setValue(false);
         }
 
-        if(!lhs.isBoolean() || !rhs.isBoolean()) {
+        if (!lhs.isBoolean() || !rhs.isBoolean()) {
             throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
         }
+
         return new ValueModel(lhs.asBoolean() || rhs.asBoolean());
     }
+
     // &&
     private ValueModel sc_and(DyadicExpr_FContext ctx) {
         ValueModel lhs = this.visit(ctx.expr(0));
         ValueModel rhs = this.visit(ctx.expr(1));
+
         if (lhs.isNumber() && lhs.asLong() == 0) {
             return new ValueModel(false);
-        }else {
+        } else {
             lhs.setValue(true);
         }
 
@@ -783,9 +838,10 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             rhs.setValue(rhs.asLong() != 0);
         }
 
-        if(!lhs.isBoolean() || !rhs.isBoolean()) {
+        if (!lhs.isBoolean() || !rhs.isBoolean()) {
             throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
         }
+
         return new ValueModel(lhs.asBoolean() && rhs.asBoolean());
     }
 
@@ -810,18 +866,18 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
     private void setAtIndex(ParserRuleContext ctx, List<ExprContext> indexes, ValueModel val, ValueModel newVal) {
         if (!val.isList()) {
-            throw newParseException(ctx.start,"类型错误");
+            throw newParseException(ctx.start, "类型错误");
         }
         for (int i = 0; i < indexes.size() - 1; i++) {
             ValueModel idx = this.visit(indexes.get(i));
             if (!idx.isNumber()) {
-                throw newParseException(ctx.start,"类型错误");
+                throw newParseException(ctx.start, "类型错误");
             }
             val = val.asList().get(idx.asDouble().intValue());
         }
         ValueModel idx = this.visit(indexes.get(indexes.size() - 1));
         if (!idx.isNumber()) {
-            throw newParseException(ctx.start,"类型错误");
+            throw newParseException(ctx.start, "类型错误");
         }
         val.asList().set(idx.asDouble().intValue(), newVal);
     }

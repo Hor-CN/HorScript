@@ -35,24 +35,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatement(HorScriptParser.StatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#idList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIdList(HorScriptParser.IdListContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#exprList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprList(HorScriptParser.ExprListContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#indexes}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIndexes(HorScriptParser.IndexesContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code nullValue}
 	 * labeled alternative in {@link HorScriptParser#primitiveValue}.
 	 * @param ctx the parse tree
@@ -81,13 +63,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringValue(HorScriptParser.StringValueContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code listValue}
-	 * labeled alternative in {@link HorScriptParser#primitiveValue}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitListValue(HorScriptParser.ListValueContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#anyObject}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -105,6 +80,42 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitObjectKeyValue(HorScriptParser.ObjectKeyValueContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#assignment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssignment(HorScriptParser.AssignmentContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#noAssignment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNoAssignment(HorScriptParser.NoAssignmentContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#idList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIdList(HorScriptParser.IdListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#exprList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprList(HorScriptParser.ExprListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#indexes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIndexes(HorScriptParser.IndexesContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#listValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListValue(HorScriptParser.ListValueContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#list}.
 	 * @param ctx the parse tree
@@ -195,18 +206,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIdentifierExpr(HorScriptParser.IdentifierExprContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#assignment}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssignment(HorScriptParser.AssignmentContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#noAssignment}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNoAssignment(HorScriptParser.NoAssignmentContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#ifStatement}.
 	 * @param ctx the parse tree

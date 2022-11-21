@@ -54,5 +54,10 @@ lambdaTest("The lambda function"," was tested successfully!")
     打印("第",i,"次","打印")
     i = i + 1;
 }判断循环(i <= 10)
-*/
+
 打印("123")打印("123")
+赋值 a = {
+    b: 123,
+    c: "456"
+}
+*/

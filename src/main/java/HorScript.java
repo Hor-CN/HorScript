@@ -1,6 +1,7 @@
 import core.HorScriptLexer;
 import core.HorScriptParser;
 import exception.ThrowingErrorListener;
+import exception.VisitorException;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -37,14 +38,20 @@ public class HorScript {
         try {
             CharStream input = CharStreams.fromFileName(fileName.getAbsolutePath());
             parser(input);
-        }catch (Exception e) {
+        }catch (VisitorException e ) {
+            if (e.getMessage() != null) {
+                System.err.println(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    private void parser(CharStream charStream) {
-        try {
+    private void parser(CharStream charStream) throws VisitorException {
             HorScriptLexer lexer = new HorScriptLexer(charStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             HorScriptParser parser = new HorScriptParser(tokens);
@@ -56,13 +63,5 @@ public class HorScript {
             Map<String, Function> functions = Collections.emptyMap();
             HorScriptVisitor visitor = new HorScriptVisitor(scope,functions);
             visitor.visit(tree);
-        } catch (Exception e) {
-            if (e.getMessage() != null) {
-                System.err.println(e.getMessage());
-            } else {
-                e.printStackTrace();
-            }
-        }
-
     }
 }

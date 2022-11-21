@@ -1,7 +1,6 @@
 // Define a grammar called Hello
 parser grammar HorScriptParser;
 options { tokenVocab = HorScriptLexer; }
-/* 语句 & 命令 */
 
 /* 入口 */
 rootInstSet : importInst* blockSet EOF;
@@ -13,39 +12,45 @@ importInst  : IMPORT ROU? STRING AS IDENTIFIER SEM?; // 导入 @'xxx.cn.itbk.hor
 blockSet    : ( statement | functionDecl )* ( RETURN expr (SEM)? )?;
 
 statement
- : assignment SEM? // 赋值 xx = xx;
- | noAssignment SEM? // xx[] = xx;
- | functionCall SEM? // 函数调用
- | systemFunction SEM? // 系统函数
+ : assignment SEM?          // 赋值 xx = xx;
+ | noAssignment SEM?        // xx[] = xx;
+ | functionCall SEM?        // 函数调用
+ | systemFunction SEM?      // 系统函数
  | ifStatement
  | forStatement
  | whileStatement
  | doWhileStatement SEM?
  ;
 
-// 参数列表
-idList     : IDENTIFIER ( COMMA IDENTIFIER )*; // a,b,c
-exprList   : expr ( COMMA expr )*;
-/* 索引 */
-indexes    : ( LSBT expr RSBT )+; // [1][]
-
 /* 基本类型 */
 primitiveValue : NULL                            #nullValue      // 空值
                | ( TRUE | FALSE)                 #booleanValue   // 布尔类型
                | ( INTEGER_NUM | DECIMAL_NUM )   #numberValue    // 数值类型
-               | STRING indexes?                 #stringValue    // 字符类型
-               | list indexes?                   #listValue      // 列表类型
-//               | object indexes?                 #objectValue    // 对象
+               | STRING indexes?                 #stringValue    // 字符串类型
                ;
 
-anyObject :  primitiveValue | objectValue | lambdaDef | functionCall | expr;
+// 任意对象
+anyObject :  primitiveValue | listValue | objectValue | lambdaDef | functionCall | expr;
 
 /* 对象结构 */
 objectValue     : OCBR objectKeyValue? ( COMMA objectKeyValue)* CCBR;
 objectKeyValue  : IDENTIFIER ( COLON anyObject)?;
 
+/* 赋值 */
+assignment : VAR IDENTIFIER ASS anyObject;
+noAssignment: IDENTIFIER indexes? ASS anyObject;
+
+// 函数参数列表
+idList     : IDENTIFIER ( COMMA IDENTIFIER )*; // a,b,c
+exprList   : expr ( COMMA expr )*;
+/* 索引 */
+indexes    : ( LSBT expr RSBT )+; // [1][]
 /* 列表结构 */
+listValue  : list indexes? ;
 list       : LSBT exprList? RSBT ;
+/* 路由映射 */
+//routerMapping :
+
 
 /* 表达式 */
 expr:  (primitiveValue | functionCall indexes? )                 #atomExpr
@@ -62,10 +67,6 @@ expr:  (primitiveValue | functionCall indexes? )                 #atomExpr
     | IDENTIFIER indexes?                                        #identifierExpr
     ;
 
-/* 赋值 */
-assignment : VAR IDENTIFIER ASS anyObject;
-noAssignment: IDENTIFIER indexes? ASS anyObject;
-
 /* 判断 */
 ifStatement: ifStat elseIfStat* elseStat?;
 ifStat    : IF LBT expr RBT OCBR blockSet CCBR;
@@ -73,15 +74,13 @@ elseIfStat: ELSE IF LBT expr RBT OCBR blockSet CCBR;
 elseStat: ELSE OCBR blockSet CCBR;
 
 /* 循环 */
-forStatement: FOR LBT IDENTIFIER (ASS expr)? op=(TO|IN) expr RBT OCBR blockSet CCBR;
-
+forStatement: FOR LBT IDENTIFIER (ASS anyObject)? op=(TO|IN) anyObject RBT OCBR blockSet CCBR;
 /* 判断循环 */
 whileStatement: WHILE LBT expr RBT OCBR blockSet CCBR;
 doWhileStatement: DO OCBR blockSet CCBR WHILE LBT expr RBT;
 
 /* lambda函数声明 */
 lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;
-
 /* 函数 */
 functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() {}
 /* 函数调用 */
