@@ -60,4 +60,18 @@ lambdaTest("The lambda function"," was tested successfully!")
     b: 123,
     c: "456"
 }
+赋值 x = {
+    a:123,
+    b:{
+      c:456,
+      e: {
+        f:() => {
+            打印("123")
+        }
+      }
+    }
+}
+打印("the Object: ",x.b.c)
 */
+赋值 a = [1,2,3,"zf"]
+打印(a)

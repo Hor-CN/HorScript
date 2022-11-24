@@ -105,23 +105,50 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprList(HorScriptParser.ExprListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#indexes}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIndexes(HorScriptParser.IndexesContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#listValue}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitListValue(HorScriptParser.ListValueContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#list}.
+	 * Visit a parse tree produced by the {@code identifierExpr}
+	 * labeled alternative in {@link HorScriptParser#routerMapping}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitList(HorScriptParser.ListContext ctx);
+	T visitIdentifierExpr(HorScriptParser.IdentifierExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code listRoute}
+	 * labeled alternative in {@link HorScriptParser#routerMapping}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListRoute(HorScriptParser.ListRouteContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stringRoute}
+	 * labeled alternative in {@link HorScriptParser#routerMapping}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringRoute(HorScriptParser.StringRouteContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#routeNameSet}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRouteNameSet(HorScriptParser.RouteNameSetContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#routeName}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRouteName(HorScriptParser.RouteNameContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#indexes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIndexes(HorScriptParser.IndexesContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code dyadicExpr_F}
 	 * labeled alternative in {@link HorScriptParser#expr}.
@@ -129,13 +156,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDyadicExpr_F(HorScriptParser.DyadicExpr_FContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprExpr}
-	 * labeled alternative in {@link HorScriptParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprExpr(HorScriptParser.ExprExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code dyadicExpr_D}
 	 * labeled alternative in {@link HorScriptParser#expr}.
@@ -200,12 +220,12 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAtomExpr(HorScriptParser.AtomExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code identifierExpr}
+	 * Visit a parse tree produced by the {@code privilegeExpr}
 	 * labeled alternative in {@link HorScriptParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitIdentifierExpr(HorScriptParser.IdentifierExprContext ctx);
+	T visitPrivilegeExpr(HorScriptParser.PrivilegeExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#ifStatement}.
 	 * @param ctx the parse tree

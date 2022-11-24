@@ -1,5 +1,7 @@
 import core.HorScriptLexer;
 import core.HorScriptParser;
+import domain.DataModel;
+import domain.ObjectModel;
 import exception.ThrowingErrorListener;
 import exception.VisitorException;
 import org.antlr.v4.runtime.CharStream;
@@ -61,6 +63,7 @@ public class HorScript {
             ParseTree tree = parser.rootInstSet();
             Scope scope = new Scope();
             Map<String, Function> functions = Collections.emptyMap();
+            Map<String, DataModel> objectModels = Collections.emptyMap();
             HorScriptVisitor visitor = new HorScriptVisitor(scope,functions);
             visitor.visit(tree);
     }

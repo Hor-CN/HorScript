@@ -12,6 +12,8 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     public static ValueModel NULL  = new ValueModel("空");
     public static final ValueModel VOID = new ValueModel();
+    public static ValueModel TRUE = new ValueModel(true);
+    public static ValueModel FALSE = new ValueModel(false);
 
     private Object value;
 
@@ -49,6 +51,15 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
     /** 判断是否为 ValueModel 类型值 */
     public boolean isValue() {
         return true;
+    }
+
+    /** 判断是否为 ObjectModel **/
+    public boolean isObjectModel() {
+        return this.value instanceof ObjectModel;
+    }
+
+    public ObjectModel asObjectModel() {
+        return (ObjectModel) this.value;
     }
 
     /** 判断是否为 Null */
@@ -108,7 +119,7 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     @Override
     public boolean isList() {
-        return value instanceof List<?>;
+        return value instanceof ListModel;
     }
 
     /** 是否可以转为 boolean 类型值 */
@@ -385,8 +396,8 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 转换为List  */
     @SuppressWarnings("unchecked")
-    public List<ValueModel> asList() {
-        return (List<ValueModel>)value;
+    public ListModel asList() {
+        return (ListModel) value;
     }
 
     public <T> Object asT() {

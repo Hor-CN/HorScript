@@ -26,9 +26,7 @@ public interface DataModel {
     default boolean isObject() {
         return false;
     }
-
-    /** 判断是否为 UdfModel 类型值 */
-    default boolean isUdf() {
-        return false;
+    default  <T> Object asT() {
+        return null;
     }
 }
