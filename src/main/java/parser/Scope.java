@@ -10,9 +10,9 @@ import java.util.Map;
  */
 public class Scope {
 
-    private Scope parent;
-    private Map<String, ValueModel> variables;
-    private boolean isFunction;
+    private final Scope parent;
+    private final Map<String, ValueModel> variables;
+    private final boolean isFunction;
 
     public Scope() {
         // only for the global scope, the parent is null

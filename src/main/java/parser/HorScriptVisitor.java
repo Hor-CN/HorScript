@@ -1,5 +1,7 @@
 package parser;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.NumberUtil;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
@@ -26,7 +28,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private Scope scope;
     // 方法
     private final Map<String, Function> functions;
-    private static final ReturnValue returnValue = new ReturnValue();
+//    private static final ReturnValue returnValue = new ReturnValue();
 
     public HorScriptVisitor(Scope scope, Map<String, Function> functions) {
         this.scope = scope;
@@ -44,11 +46,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         for (StatementContext sx : ctx.statement()) {
             this.visit(sx);
         }
-        ExprContext ex;
-        if ((ex = ctx.expr()) != null) {
-            returnValue.value = this.visit(ex);
+        AnyObjectContext ex;
+        if ((ex = ctx.anyObject()) != null) {
+//            returnValue.value = this.visit(ex);
+            ValueModel returnValue = this.visit(ex);
             scope = scope.parent();
-            throw returnValue;
+//            throw returnValue;
+            return returnValue;
         }
         scope = scope.parent();
         return ValueModel.VOID;
@@ -125,7 +129,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return ValueModel.VOID;
     }
 
-    // 函数调用 functionCall: IDENTIFIER LBT exprList? RBT #identifierFunctionCall; // xx()
+    // 函数调用 functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?  // xx()
     @Override
     public ValueModel visitIdentifierFunctionCall(IdentifierFunctionCallContext ctx) {
         List<ExprContext> params = ctx.exprList() != null ? ctx.exprList().expr() : new ArrayList<>();
@@ -136,11 +140,37 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             for (ExprContext param : params) {
                 args.add(this.visit(param));
             }
+            ValueModel val = function.invoke(args, functions);
+            if (val.isString() || val.isList() || val.isObjectModel()) {
+                // funcCallResult_route1
+                FunctionCallResultContext functionCallResultContext = ctx.functionCallResult();
+                if (functionCallResultContext != null) {
+                    ValueModel visit = this.visit(functionCallResultContext);
+                    List<ExprContext> exps = Convert.convert(new TypeReference<List<ExprContext>>() {}, visit.asOv());
+                    val = resolveIndexes(val, exps);
+                    return val;
+                }
+            }
             return function.invoke(args, functions);
         }
         throw newParseException(ctx.start, ctx.getText());
     }
 
+    @Override
+    public ValueModel visitFuncCallResult_route1(FuncCallResult_route1Context ctx) {
+        ctx.accept(this);
+        return super.visitFuncCallResult_route1(ctx);
+    }
+
+    @Override
+    public ValueModel visitFuncCallResult_route2(FuncCallResult_route2Context ctx) {
+        if (ctx.indexes() != null) {
+            List<ExprContext> exps = ctx.indexes().expr();
+            return new ValueModel(exps);
+        }
+
+        return super.visitFuncCallResult_route2(ctx);
+    }
 
     // IDENTIFIER indexes?                                        #identifierExpr
     @Override
@@ -191,13 +221,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return new ValueModel(objectModel);
     }
 
-
-    // listValue  : LSBT exprList? RSBT; // 列表类型
+    // listValue  : LSBT anyObject? (COMMA anyObject)* RSBT;
     @Override
     public ValueModel visitListValue(ListValueContext ctx) {
         ListModel listModel = new ListModel();
-        if (ctx.exprList() != null) {
-            for (ExprContext ex : ctx.exprList().expr()) {
+        if (ctx.anyObject() != null) {
+            for (AnyObjectContext ex : ctx.anyObject()) {
                 listModel.add(this.visit(ex));
             }
         }
@@ -343,13 +372,14 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return sBuffer.toString();
     }
 
-    // STRING indexes?                 #stringValue    // 字符串 or 字符串[0]
+    // 字符串类型
     @Override
     public ValueModel visitStringValue(StringValueContext ctx) {
         String text = fixString(ctx.STRING());
         return new ValueModel(text);
     }
 
+    // STRING indexes?                 // 字符串 or 字符串[0]
     @Override
     public ValueModel visitStringRoute(StringRouteContext ctx) {
         String text = fixString(ctx.STRING());

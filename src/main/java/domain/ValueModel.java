@@ -1,5 +1,6 @@
 package domain;
 
+import core.HorScriptParser;
 import utils.NumberUtils;
 import utils.OperatorUtils;
 
@@ -40,6 +41,7 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
         return this.value;
     }
 
+
     /**
      * 解开 DataModel 包裹，采用 Map 和 List 封装。
      */
@@ -65,6 +67,10 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
     /** 判断是否为 Null */
     public boolean isNull() {
         return this.value == null;
+    }
+
+    public boolean isVoid() {
+        return this == VOID;
     }
 
     /** 是否可以转为 Number 类型值 */
@@ -391,7 +397,7 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 转换为 String 值 */
     public String asString() {
-        return this.value == null ? null : this.value.toString();
+        return toString();
     }
 
     /** 转换为List  */
@@ -462,6 +468,9 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
     }
 
     public String toString() {
+        if (isVoid()) {
+            return "";
+        }
         return isNull() ? "空" : String.valueOf(value);
     }
 

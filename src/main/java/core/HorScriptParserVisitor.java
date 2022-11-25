@@ -118,6 +118,13 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIdentifierExpr(HorScriptParser.IdentifierExprContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code nameExprRoute}
+	 * labeled alternative in {@link HorScriptParser#routerMapping}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNameExprRoute(HorScriptParser.NameExprRouteContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code listRoute}
 	 * labeled alternative in {@link HorScriptParser#routerMapping}.
 	 * @param ctx the parse tree
@@ -149,6 +156,123 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIndexes(HorScriptParser.IndexesContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#ifStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIfStatement(HorScriptParser.IfStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#ifStat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIfStat(HorScriptParser.IfStatContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#elseIfStat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitElseIfStat(HorScriptParser.ElseIfStatContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#elseStat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitElseStat(HorScriptParser.ElseStatContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#forStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForStatement(HorScriptParser.ForStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#whileStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStatement(HorScriptParser.WhileStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#doWhileStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDoWhileStatement(HorScriptParser.DoWhileStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#lambdaDef}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLambdaDef(HorScriptParser.LambdaDefContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#functionDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionDecl(HorScriptParser.FunctionDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code identifierFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#functionCall}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIdentifierFunctionCall(HorScriptParser.IdentifierFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code funcCallResult_route1}
+	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncCallResult_route1(HorScriptParser.FuncCallResult_route1Context ctx);
+	/**
+	 * Visit a parse tree produced by the {@code funcCallResult_route2}
+	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncCallResult_route2(HorScriptParser.FuncCallResult_route2Context ctx);
+	/**
+	 * Visit a parse tree produced by the {@code funcCallResult_call}
+	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncCallResult_call(HorScriptParser.FuncCallResult_callContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code printFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrintFunctionCall(HorScriptParser.PrintFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code printlnFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrintlnFunctionCall(HorScriptParser.PrintlnFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code assertFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssertFunctionCall(HorScriptParser.AssertFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code sizeFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSizeFunctionCall(HorScriptParser.SizeFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code inputFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#systemFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInputFunctionCall(HorScriptParser.InputFunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code dyadicExpr_F}
 	 * labeled alternative in {@link HorScriptParser#expr}.
@@ -226,100 +350,4 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPrivilegeExpr(HorScriptParser.PrivilegeExprContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#ifStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIfStatement(HorScriptParser.IfStatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#ifStat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIfStat(HorScriptParser.IfStatContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#elseIfStat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitElseIfStat(HorScriptParser.ElseIfStatContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#elseStat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitElseStat(HorScriptParser.ElseStatContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#forStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitForStatement(HorScriptParser.ForStatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#whileStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitWhileStatement(HorScriptParser.WhileStatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#doWhileStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDoWhileStatement(HorScriptParser.DoWhileStatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#lambdaDef}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLambdaDef(HorScriptParser.LambdaDefContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#functionDecl}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionDecl(HorScriptParser.FunctionDeclContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code identifierFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#functionCall}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIdentifierFunctionCall(HorScriptParser.IdentifierFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code printFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitPrintFunctionCall(HorScriptParser.PrintFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code printlnFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitPrintlnFunctionCall(HorScriptParser.PrintlnFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code assertFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssertFunctionCall(HorScriptParser.AssertFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code sizeFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSizeFunctionCall(HorScriptParser.SizeFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code inputFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInputFunctionCall(HorScriptParser.InputFunctionCallContext ctx);
 }

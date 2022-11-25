@@ -9,7 +9,7 @@ rootInstSet : importInst* blockSet EOF;
 importInst  : IMPORT ROU? STRING AS IDENTIFIER SEM?; // 导入 @'xxx.cn.itbk.horscript.core' as xx;
 
 /* 语句块 */
-blockSet    : ( statement | functionDecl )* ( RETURN expr (SEM)? )?;
+blockSet    : ( statement | functionDecl )* ( RETURN anyObject (SEM)? )?;
 
 statement
  : assignment SEM?
@@ -45,11 +45,11 @@ idList     : IDENTIFIER ( COMMA IDENTIFIER )*; // a,b,c
 exprList   : expr ( COMMA expr )*;
 
 /* 列表结构 */
-listValue  : LSBT exprList? RSBT;
+listValue  : LSBT anyObject? (COMMA anyObject)* RSBT;
 
 /* 路由映射 */
 routerMapping : IDENTIFIER indexes?                       #identifierExpr
-//              | routeNameSet                              #nameExprRoute // 表达式（访问符 -> 子元素）
+              | routeNameSet                              #nameExprRoute // 表达式（访问符 -> 子元素）
               | listValue indexes?                        #listRoute     // 列表路由
               | STRING indexes?                           #stringRoute   // 字符串路由
               ;
@@ -61,19 +61,6 @@ routeName       : IDENTIFIER indexes? ;
 /* 索引 */
 indexes    : ( LSBT expr RSBT )+; // [1][]
 
-/* 表达式 */
-expr:  (primitiveValue | functionCall indexes? | routerMapping)  #atomExpr
-    | LBT expr RBT                                               #privilegeExpr    // 优先
-    | prefix=( PLUS | MINUS | NOT) expr                          #unaryExpr // 一元运算 + - !
-    | expr op=( MUL | DIV | MOD ) expr                           #dyadicExpr_A // 二元运算 优先级1st  * /  %
-    | expr op=( PLUS | MINUS) expr                               #dyadicExpr_B   // 二元运算优先级 2st + -
-    | expr op=( AND | OR | XOR | LSHIFT | RSHIFT | RSHIFT2) expr #dyadicExpr_C   // 二元运算优先级 3st
-    | expr op=( GTEquals | LTEquals | GT | LT ) expr             #dyadicExpr_D // 4st '>=' | '<=' | '>' | '<'
-    | expr op=( EQ | NE ) expr                                   #dyadicExpr_E // 5st '=='  '!='
-    | expr op=( SC_OR | SC_AND) expr                             #dyadicExpr_F  // 6st || &&
-    | expr QMark expr COLON expr                                 #ternaryExpr    // 三元运算
-    | expr IN expr                                               #inExpr // 是否在xx true false
-    ;
 
 /* 判断 */
 ifStatement: ifStat elseIfStat* elseStat?;
@@ -92,7 +79,13 @@ lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;
 /* 函数 */
 functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() {}
 /* 函数调用 */
-functionCall: IDENTIFIER LBT exprList? RBT #identifierFunctionCall; // xx()
+functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?                     #identifierFunctionCall;  // xx()
+functionCallResult : //functionCall indexes?                                         #functionCallRoute        // 方法返回值路由
+//                   | LBT exprList? RBT functionCallResult?                         #functionCallRoute_call
+                     indexes functionCallResult?                                   #funcCallResult_route1  // 对结果在进行路由，并处理结果
+//                   | indexes? DOT routeNameSet functionCallResult?                 #funcCallResult_route2  // 对结果在进行路由，并处理结果
+//                   | LBT ( anyObject (COMMA anyObject)* )? RBT functionCallResult? #funcCallResult_call    // 调用函数返回的函数，并处理结果
+                   ;
 /* 内置函数 */
 systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | PRINTLN LBT exprList? RBT   #printlnFunctionCall
@@ -100,3 +93,17 @@ systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | SIZE LBT anyObject RBT     #sizeFunctionCall
               | INPUT LBT STRING? RBT      #inputFunctionCall
               ;
+
+/* 表达式 */
+expr:  (primitiveValue | functionCall | routerMapping)           #atomExpr
+    | LBT expr RBT                                               #privilegeExpr // 优先
+    | prefix=( PLUS | MINUS | NOT) expr                          #unaryExpr     // 一元运算 + - !
+    | expr op=( MUL | DIV | MOD ) expr                           #dyadicExpr_A  // 二元运算 优先级1st  * /  %
+    | expr op=( PLUS | MINUS) expr                               #dyadicExpr_B  // 二元运算优先级 2st + -
+    | expr op=( AND | OR | XOR | LSHIFT | RSHIFT | RSHIFT2) expr #dyadicExpr_C  // 二元运算优先级 3st
+    | expr op=( GTEquals | LTEquals | GT | LT ) expr             #dyadicExpr_D  // 4st '>=' | '<=' | '>' | '<'
+    | expr op=( EQ | NE ) expr                                   #dyadicExpr_E  // 5st '=='  '!='
+    | expr op=( SC_OR | SC_AND) expr                             #dyadicExpr_F  // 6st || &&
+    | expr QMark expr COLON expr                                 #ternaryExpr   // 三元运算
+    | expr IN expr                                               #inExpr        // 是否在xx true false
+    ;

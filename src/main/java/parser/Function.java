@@ -10,9 +10,9 @@ import java.util.Map;
 
 public class Function {
 
-    private Scope parentScope;
-    private List<TerminalNode> params;
-    private ParseTree block;
+    private final Scope parentScope;
+    private final List<TerminalNode> params;
+    private final ParseTree block;
 
     Function(Scope parentScope, List<TerminalNode> params, ParseTree block) {
         this.parentScope = parentScope;
@@ -39,13 +39,6 @@ public class Function {
             scopeNext.assignParam(this.params.get(i).getText(), value);
         }
         HorScriptVisitor evalVisitorNext = new HorScriptVisitor(scopeNext,functions);
-
-        ValueModel ret = ValueModel.VOID;
-        try {
-            evalVisitorNext.visit(this.block);
-        } catch (ReturnValue returnValue) {
-            ret = returnValue.value;
-        }
-        return ret;
+        return evalVisitorNext.visit(this.block);
     }
 }
