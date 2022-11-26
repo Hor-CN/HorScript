@@ -697,7 +697,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(NumberUtil.div(lhs.asString(), rhs.asString()));
+            return new ValueModel(NumberUtil.toBigDecimal(NumberUtil.toStr(NumberUtil.div(lhs.asString(), rhs.asString()))));
         }
 
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
