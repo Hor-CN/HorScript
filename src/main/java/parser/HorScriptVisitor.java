@@ -59,45 +59,43 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // assignment SEM? // 赋值 xx = xx;
     @Override
     public ValueModel visitAssignment(AssignmentContext ctx) {
-        LambdaDefContext lambdaDefContext = ctx.anyObject().lambdaDef();
-        if (lambdaDefContext != null) {
-            Function function = (Function) this.visit(lambdaDefContext).asOv();
-            String id = ctx.IDENTIFIER().getText() + function.getParams().size();
+        ValueModel visit = this.visit(ctx.anyObject());
+        // 如果是 lambda 函数 加入 functions
+        if (visit.isFunction()) {
+            String id = ctx.IDENTIFIER().getText() + visit.asFunction().getParams().size();
             // 函数已经定义抛出异常
             if (functions.get(id) != null) {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
-            functions.put(id, function);
+            functions.put(id, visit.asFunction());
             return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
-        scope.assign(id, this.visit(ctx.anyObject()));
+        scope.assign(id, visit);
         return ValueModel.VOID;
     }
 
     // 无前缀赋值
     @Override
     public ValueModel visitNoAssignment(NoAssignmentContext ctx) {
-
-        LambdaDefContext lambdaDefContext = ctx.anyObject().lambdaDef();
-        if (lambdaDefContext != null) {
-            Function function = (Function) this.visit(lambdaDefContext).asOv();
-            String id = ctx.IDENTIFIER().getText() + function.getParams().size();
+        ValueModel visit = this.visit(ctx.anyObject());
+        // 如果是 lambda 函数 加入 functions
+        if (visit.isFunction()) {
+            String id = ctx.IDENTIFIER().getText() + visit.asFunction().getParams().size();
             // 函数已经定义抛出异常
             if (functions.get(id) != null) {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
-            functions.put(id, function);
+            functions.put(id, visit.asFunction());
             return ValueModel.VOID;
         }
-        ValueModel newVal = this.visit(ctx.anyObject());
         if (ctx.indexes() != null) {
             ValueModel val = scope.resolve(ctx.IDENTIFIER().getText());
             List<ExprContext> exps = ctx.indexes().expr();
-            setAtIndex(ctx, exps, val, newVal);
+            setAtIndex(ctx, exps, val, visit);
         } else {
             String id = ctx.IDENTIFIER().getText();
-            scope.assign(id, newVal);
+            scope.assign(id, visit);
         }
         return ValueModel.VOID;
     }
@@ -144,30 +142,47 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 FunctionCallResultContext functionCallResultContext = ctx.functionCallResult();
                 if (functionCallResultContext != null) {
                     ValueModel visit = this.visit(functionCallResultContext);
-                    List<ExprContext> exps = Convert.convert(new TypeReference<List<ExprContext>>() {}, visit.asOv());
+                    List<ExprContext> exps = Convert.convert(new TypeReference<List<ExprContext>>() {
+                    }, visit.asOv());
                     val = resolveIndexes(val, exps);
                     return val;
                 }
             }
-            return function.invoke(args, functions);
+            if (val.isFunction()) {
+                FunctionCallResultContext functionCallResultContext = ctx.functionCallResult();
+                if (functionCallResultContext != null) {
+                    ValueModel visit = this.visit(functionCallResultContext);
+                    List<ValueModel> _args = Convert.convert(new TypeReference<List<ValueModel>>() {
+                    }, visit.asOv());
+                    return  val.asFunction().invoke(_args, functions);
+                }
+
+            }
+            return val;
         }
         throw newParseException(ctx.start, ctx.getText());
     }
 
     @Override
-    public ValueModel visitFuncCallResult_route1(FuncCallResult_route1Context ctx) {
-        ctx.accept(this);
-        return super.visitFuncCallResult_route1(ctx);
+    public ValueModel visitFuncCallResult_call(FuncCallResult_callContext ctx) {
+        List<ExprContext> params = ctx.exprList() != null ? ctx.exprList().expr() : new ArrayList<>();
+        if (params != null) {
+            List<ValueModel> args = new ArrayList<>(params.size());
+            for (ExprContext param : params) {
+                args.add(this.visit(param));
+            }
+            return new ValueModel(args);
+        }
+        return ValueModel.VOID;
     }
 
     @Override
-    public ValueModel visitFuncCallResult_route2(FuncCallResult_route2Context ctx) {
+    public ValueModel visitFuncCallResult_route1(FuncCallResult_route1Context ctx) {
         if (ctx.indexes() != null) {
             List<ExprContext> exps = ctx.indexes().expr();
             return new ValueModel(exps);
         }
-
-        return super.visitFuncCallResult_route2(ctx);
+        return ValueModel.VOID;
     }
 
     // IDENTIFIER indexes?                                        #identifierExpr

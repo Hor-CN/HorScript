@@ -256,13 +256,6 @@ public class HorScriptParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> i
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFuncCallResult_route2(HorScriptParser.FuncCallResult_route2Context ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitFuncCallResult_call(HorScriptParser.FuncCallResult_callContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

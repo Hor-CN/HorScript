@@ -84,7 +84,7 @@ functionCallResult : //functionCall indexes?                                    
 //                   | LBT exprList? RBT functionCallResult?                         #functionCallRoute_call
                      indexes functionCallResult?                                   #funcCallResult_route1  // 对结果在进行路由，并处理结果
 //                   | indexes? DOT routeNameSet functionCallResult?                 #funcCallResult_route2  // 对结果在进行路由，并处理结果
-//                   | LBT ( anyObject (COMMA anyObject)* )? RBT functionCallResult? #funcCallResult_call    // 调用函数返回的函数，并处理结果
+                   | LBT exprList? RBT functionCallResult?                         #funcCallResult_call    // 调用函数返回的函数，并处理结果
                    ;
 /* 内置函数 */
 systemFunction: PRINT LBT exprList? RBT     #printFunctionCall

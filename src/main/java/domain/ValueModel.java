@@ -1,6 +1,7 @@
 package domain;
 
 import core.HorScriptParser;
+import parser.Function;
 import utils.NumberUtils;
 import utils.OperatorUtils;
 
@@ -59,6 +60,16 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
     public boolean isObjectModel() {
         return this.value instanceof ObjectModel;
     }
+
+    /** 判断是否为 Function **/
+    public boolean isFunction() {
+        return this.value instanceof Function;
+    }
+
+    public Function asFunction() {
+        return (Function) this.value;
+    }
+
 
     public ObjectModel asObjectModel() {
         return (ObjectModel) this.value;
