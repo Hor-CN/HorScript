@@ -137,4 +137,12 @@ public class ListModel implements DataModel {
     public String toString() {
         return  dataModel.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        ListModel obj1 = (ListModel) obj;
+        return dataModel.equals(obj1.dataModel);
+    }
+
+
 }

@@ -154,7 +154,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                     ValueModel visit = this.visit(functionCallResultContext);
                     List<ValueModel> _args = Convert.convert(new TypeReference<List<ValueModel>>() {
                     }, visit.asOv());
-                    return  val.asFunction().invoke(_args, functions);
+                    return val.asFunction().invoke(_args, functions);
                 }
 
             }
@@ -383,6 +383,43 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             sBuffer.append(content.asString());
         }
         return sBuffer.toString();
+    }
+
+    @Override
+    public ValueModel visitSizeFunctionCall(SizeFunctionCallContext ctx) {
+        ValueModel value = this.visit(ctx.anyObject());
+
+        if (value.isString() || value.isNumber()) {
+            return new ValueModel(value.asString().length());
+        }
+
+        if (value.isList()) {
+            return new ValueModel(value.asList().size());
+        }
+        if (value.isFunction()) {
+            return new ValueModel(value.asFunction().getParams().size());
+        }
+        if (value.isBoolean()) {
+            return new ValueModel(1);
+        }
+
+        throw newParseException(ctx.start, ctx.getText());
+    }
+
+    @Override
+    public ValueModel visitAssertFunctionCall(AssertFunctionCallContext ctx) {
+
+        ValueModel value = this.visit(ctx.expr());
+
+        if(!value.isBoolean()) {
+            throw newParseException(ctx.start,ctx.getText());
+        }
+
+        if(!value.asBoolean()) {
+            throw newParseException(ctx.start,"断言失败: "+ctx.expr().getText());
+        }
+
+        return ValueModel.VOID;
     }
 
     // 字符串类型
@@ -744,9 +781,8 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(lhs.asLong() ^ rhs.asLong());
+            return new ValueModel(NumberUtil.pow(lhs.asBigDecimal(), rhs.asInt()));
         }
-
         throw newParseException(ctx.start, "非法表达式: " + ctx.getText());
     }
 

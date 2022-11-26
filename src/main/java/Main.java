@@ -7,7 +7,7 @@ import java.io.File;
  */
 public class Main {
     public static void main(String[] args) {
-        File n = new File("./src/main/resources/testFn.hs");
+        File n = new File("./src/main/resources/testSys.hs");
         HorScript horScript = new HorScript();
         horScript.parserCode(n);
     }

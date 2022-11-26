@@ -79,7 +79,9 @@ lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;
 /* 函数 */
 functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() {}
 /* 函数调用 */
-functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?                     #identifierFunctionCall;  // xx()
+functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?                     #identifierFunctionCall // xx()
+            | systemFunction                                                       #systemFunctionCall
+            ;
 functionCallResult : //functionCall indexes?                                         #functionCallRoute        // 方法返回值路由
 //                   | LBT exprList? RBT functionCallResult?                         #functionCallRoute_call
                      indexes functionCallResult?                                   #funcCallResult_route1  // 对结果在进行路由，并处理结果

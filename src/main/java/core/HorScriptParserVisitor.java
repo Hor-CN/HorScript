@@ -218,6 +218,13 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIdentifierFunctionCall(HorScriptParser.IdentifierFunctionCallContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code systemFunctionCall}
+	 * labeled alternative in {@link HorScriptParser#functionCall}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSystemFunctionCall(HorScriptParser.SystemFunctionCallContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code funcCallResult_route1}
 	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
 	 * @param ctx the parse tree
