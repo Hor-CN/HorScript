@@ -28,7 +28,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private Scope scope;
     // 方法
     private final Map<String, Function> functions;
-//    private static final ReturnValue returnValue = new ReturnValue();
+    private static final ReturnValue returnValue = new ReturnValue();
 
     public HorScriptVisitor(Scope scope, Map<String, Function> functions) {
         this.scope = scope;
@@ -48,11 +48,9 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         }
         AnyObjectContext ex;
         if ((ex = ctx.anyObject()) != null) {
-//            returnValue.value = this.visit(ex);
-            ValueModel returnValue = this.visit(ex);
+            returnValue.value = this.visit(ex);
             scope = scope.parent();
-//            throw returnValue;
-            return returnValue;
+            throw returnValue;
         }
         scope = scope.parent();
         return ValueModel.VOID;

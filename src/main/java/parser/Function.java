@@ -39,6 +39,12 @@ public class Function {
             scopeNext.assignParam(this.params.get(i).getText(), value);
         }
         HorScriptVisitor evalVisitorNext = new HorScriptVisitor(scopeNext,functions);
-        return evalVisitorNext.visit(this.block);
+        ValueModel ret = ValueModel.VOID;
+        try {
+            evalVisitorNext.visit(this.block);
+        } catch (ReturnValue returnValue) {
+            ret = returnValue.value;
+        }
+        return ret;
     }
 }
