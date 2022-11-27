@@ -64,16 +64,9 @@ main(7)
 赋值 rows = 10
 循环(i = 0 到 rows) {
     赋值 number = 1
-    // 打印空格字符串
     打印(" "*(rows - i) * 2)
     循环(j = 0 到 i) {
-        如果(number >= 100) {
-            打印(" ",number)
-        }否则 如果(number >= 10){
-            打印("  ",number)
-        }否则{
-            打印("   ",number)
-        }
+        打印(" "*(4-长度(number)),number)
         number = number * (i - j) / (j + 1);
     }
     打印换行();

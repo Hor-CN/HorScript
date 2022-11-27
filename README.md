@@ -14,9 +14,9 @@
 ```
 
 <p>
-    <img src="https://img.shields.io/badge/-Java-D08031?logo=JAVA&logoColor=white" />
-    <img src="https://img.shields.io/badge/-gralde-green" />
-    <img src="https://img.shields.io/badge/-antlr-red?logo=antlr&logoColor=white" />
+    <img src="https://img.shields.io/badge/-Java-D08031?logo=JAVA&logoColor=white" alt="java" />
+    <img src="https://img.shields.io/badge/-gralde-green"  alt="gralde"/>
+    <img src="https://img.shields.io/badge/-antlr-red?logo=antlr&logoColor=white"  alt="antlr"/>
 </p>
 </div>
 
@@ -64,6 +64,7 @@ HorScript，它是一种脚本语言，旨在通过提供以**中文**来实现�
 - [x] 特殊类型 `空`
 - [x] 函数声明与调用
 - [x] Lambda 函数
+- [x] 闭包：函数一等公民
 - [x] for, do while, while 循环
 - [x] 具备简单逻辑处理能力：表达式计算、条件分支
 - [x] 通用语法设计，学习成本极低
@@ -74,13 +75,64 @@ HorScript，它是一种脚本语言，旨在通过提供以**中文**来实现�
 
 ```
 打印("hello world");
+> hello world
 ```
+
+
+### Hello world
+```
+// 杨辉三角形
+赋值 rows = 10
+循环(i = 0 到 rows) {
+    赋值 number = 1
+    打印(" "*(rows - i) * 2)
+    循环(j = 0 到 i) {
+        打印(" "*(4-长度(number)),number)
+        number = number * (i - j) / (j + 1);
+    }
+    打印换行();
+}
+
+// 结果:
+> Task :Main.main()
+                       1
+                     1   1
+                   1   2   1
+                 1   3   3   1
+               1   4   6   4   1
+             1   5  10  10   5   1
+           1   6  15  20  15   6   1
+         1   7  21  35  35  21   7   1
+       1   8  28  56  70  56  28   8   1
+     1   9  36  84 126 126  84  36   9   1
+   1  10  45 120 210 252 210 120  45  10   1
+```
+
+> 
+[更多例子](https://github.com/Hor-CN/HorScript/tree/main/src/main/resources)
+
+## 关键字
+> 与现有编程语言关键字对照表
+
+|    赋值 - Var    | 导入 - import | 为 - AS      |
+|:--------------:|-------------|-------------|
+|    函数 - def    | 返回 - return | 断言 - assert |
+|    如果 - if     | 否则 - else   | 循环 - for    |
+|  判断循环 - while  | 开始 - do     | 到 - to      |
+|     在 - in     | 空 - null    | 打印 - print  |
+| 打印换行 - println | 输入 - input  | 长度 - size   |
+|     真-true     | 假 - false   | 导出 - export |
+
 
 ## 文档
 
 > 详情用法请看文档
 
 - [HorScript文档](https://github.com/Hor-CN/HorScript/wiki)
+
+
+## 协作
+如果您想参与此项目，请点击右上角的 `Fork` 按钮，我们共同维护此项目。
 
 ## 联系作者
 
