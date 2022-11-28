@@ -63,8 +63,8 @@ public class HorScript {
             ParseTree tree = parser.rootInstSet();
             Scope scope = new Scope();
             Map<String, Function> functions = Collections.emptyMap();
-            Map<String, DataModel> objectModels = Collections.emptyMap();
-            HorScriptVisitor visitor = new HorScriptVisitor(scope,functions);
+            Map<String, ObjectModel> objects = Collections.emptyMap();
+            HorScriptVisitor visitor = new HorScriptVisitor(scope,functions, objects);
             visitor.visit(tree);
     }
 }

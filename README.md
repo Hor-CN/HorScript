@@ -79,7 +79,7 @@ HorScript，它是一种脚本语言，旨在通过提供以**中文**来实现�
 ```
 
 
-### Hello world
+### 杨辉三角形
 ```
 // 杨辉三角形
 赋值 rows = 10
@@ -122,6 +122,7 @@ HorScript，它是一种脚本语言，旨在通过提供以**中文**来实现�
 |     在 - in     | 空 - null    | 打印 - print  |
 | 打印换行 - println | 输入 - input  | 长度 - size   |
 |     真-true     | 假 - false   | 导出 - export |
+|   全局-global    |||
 
 
 ## 文档

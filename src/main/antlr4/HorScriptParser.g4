@@ -14,6 +14,7 @@ blockSet    : ( statement | functionDecl )* ( RETURN anyObject (SEM)? )?;
 statement
  : assignment SEM?
  | noAssignment SEM?
+ | globalAssignment SEM?
  | functionCall SEM?
  | systemFunction SEM?
  | ifStatement
@@ -39,6 +40,7 @@ objectKeyValue  : IDENTIFIER ( COLON anyObject)?;
 /* 赋值 */
 assignment : VAR IDENTIFIER ASS anyObject;
 noAssignment: IDENTIFIER indexes? ASS anyObject;
+globalAssignment : GLOBAL IDENTIFIER (ASS anyObject)?;
 
 // 函数参数列表
 idList     : IDENTIFIER ( COMMA IDENTIFIER )*; // a,b,c

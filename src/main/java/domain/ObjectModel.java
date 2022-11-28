@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class ObjectModel implements DataModel {
 
-    private Map<String, DataModel> dataModel = new LinkedHashMap<>();
+    private  Map<String, DataModel> dataModel = new LinkedHashMap<>();
 
 
 

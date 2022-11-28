@@ -40,7 +40,7 @@ public class Scope {
         }
     }
 
-    private boolean isGlobalScope() {
+    public boolean isGlobalScope() {
         return parent == null;
     }
 
@@ -72,7 +72,7 @@ public class Scope {
         }
         else if(checkParent && !isGlobalScope()) {
             // Let the parent scope look for the variable
-            return parent.resolve(var, !parent.isFunction);
+            return parent.resolve(var, parent.isFunction);
         }
         else {
             // Unknown variable

@@ -2,6 +2,7 @@ package parser;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.NumberUtil;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
@@ -28,11 +29,20 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private Scope scope;
     // 方法
     private final Map<String, Function> functions;
+    // 对象
+    private final Map<String, ObjectModel> objects;
     private static final ReturnValue returnValue = new ReturnValue();
 
-    public HorScriptVisitor(Scope scope, Map<String, Function> functions) {
+    public HorScriptVisitor(Scope scope, Map<String, Function> functions){
         this.scope = scope;
         this.functions = new HashMap<>(functions);
+        this.objects = MapUtil.empty();
+    }
+
+    public HorScriptVisitor(Scope scope, Map<String, Function> functions, Map<String, ObjectModel> objects) {
+        this.scope = scope;
+        this.functions = new HashMap<>(functions);
+        this.objects = new HashMap<>(objects);
     }
 
     // 语句块
@@ -71,6 +81,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
+        // 如果是 object 进入 objects
+        if (visit.isObjectModel()) {
+//            System.out.println(visit.asObjectModel().asOv());
+            objects.put(id,visit.asObjectModel());
+            return ValueModel.VOID;
+        }
         scope.assign(id, visit);
         return ValueModel.VOID;
     }
@@ -96,6 +112,20 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         } else {
             String id = ctx.IDENTIFIER().getText();
             scope.assign(id, visit);
+        }
+        return ValueModel.VOID;
+    }
+
+    // 访问父作用域
+    @Override
+    public ValueModel visitGlobalAssignment(GlobalAssignmentContext ctx) {
+        String id = ctx.IDENTIFIER().getText();
+        if (!scope.isGlobalScope()) {
+            if(ctx.anyObject() != null) {
+                scope.assign(id,this.visit(ctx.anyObject()));
+            }else {
+                scope.assign(id, scope.resolve(id));
+            }
         }
         return ValueModel.VOID;
     }
@@ -257,6 +287,67 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return val;
     }
 
+    // 字符串类型
+    @Override
+    public ValueModel visitStringValue(StringValueContext ctx) {
+        String text = fixString(ctx.STRING());
+        return new ValueModel(text);
+    }
+
+    // STRING indexes?                 // 字符串 or 字符串[0]
+    @Override
+    public ValueModel visitStringRoute(StringRouteContext ctx) {
+        String text = fixString(ctx.STRING());
+        ValueModel val = new ValueModel(text);
+        if (ctx.indexes() != null) {
+            List<ExprContext> exps = ctx.indexes().expr();
+            val = resolveIndexes(val, exps);
+        }
+        return val;
+    }
+
+    // NUMBER                          #numberValue    // 数值类型
+    @Override
+    public ValueModel visitNumberValue(NumberValueContext ctx) {
+        ValueModel vm = new ValueModel();
+        TerminalNode intNode = ctx.INTEGER_NUM();
+        TerminalNode decimalNode = ctx.DECIMAL_NUM();
+        String radixNumber = null;
+        if (intNode != null) {
+            radixNumber = intNode.getText();
+        }
+        if (radixNumber != null) {
+            Long bigInt = new Long(radixNumber);
+            return vm.setValue(bigInt);
+        } else {
+            BigDecimal bigDec = new BigDecimal(decimalNode.getText());
+            int precisionLength = bigDec.precision();
+            if (precisionLength < 8 && !Float.isInfinite(bigDec.floatValue())) {
+                return vm.setValue(bigDec.floatValue());
+            }
+            if (precisionLength < 16 && !Double.isInfinite(bigDec.doubleValue())) {
+                return vm.setValue(bigDec.doubleValue());
+            }
+            return vm.setValue(bigDec);
+        }
+    }
+
+    //  ( TRUE | FALSE)                 #booleanValue   // boolean 类型
+    @Override
+    public ValueModel visitBooleanValue(BooleanValueContext ctx) {
+        boolean boolValue = ctx.TRUE() != null;
+        return new ValueModel(boolValue);
+    }
+
+    // null
+    @Override
+    public ValueModel visitNullValue(NullValueContext ctx) {
+        return ValueModel.NULL;
+    }
+
+
+
+
     // 如果 否则如果 否则
     @Override
     public ValueModel visitIfStatement(IfStatementContext ctx) {
@@ -373,14 +464,18 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         StringBuilder sBuffer = new StringBuilder();
         // 参数列表
         for (ExprContext ex : ctx) {
-            ValueModel content = this.visit(ex);
-            if (content.isBoolean()) {
-                content.setValue(content.asBoolean() ? '真' : '假');
+            try {
+                ValueModel content = this.visit(ex);
+                if (content.isNull()) {
+                    content.setValue('空');
+                }
+                if (content.isBoolean()) {
+                    content.setValue(content.asBoolean() ? '真' : '假');
+                }
+                sBuffer.append(content.asString());
+            }catch (NullPointerException e) {
+                throw newParseException(ex.start, "空指针异常：" + ex.getText());
             }
-            if (content.isNull()) {
-                content.setValue('空');
-            }
-            sBuffer.append(content.asString());
         }
         return sBuffer.toString();
     }
@@ -420,64 +515,6 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         }
 
         return ValueModel.VOID;
-    }
-
-    // 字符串类型
-    @Override
-    public ValueModel visitStringValue(StringValueContext ctx) {
-        String text = fixString(ctx.STRING());
-        return new ValueModel(text);
-    }
-
-    // STRING indexes?                 // 字符串 or 字符串[0]
-    @Override
-    public ValueModel visitStringRoute(StringRouteContext ctx) {
-        String text = fixString(ctx.STRING());
-        ValueModel val = new ValueModel(text);
-        if (ctx.indexes() != null) {
-            List<ExprContext> exps = ctx.indexes().expr();
-            val = resolveIndexes(val, exps);
-        }
-        return val;
-    }
-
-    // NUMBER                          #numberValue    // 数值类型
-    @Override
-    public ValueModel visitNumberValue(NumberValueContext ctx) {
-        ValueModel vm = new ValueModel();
-        TerminalNode intNode = ctx.INTEGER_NUM();
-        TerminalNode decimalNode = ctx.DECIMAL_NUM();
-        String radixNumber = null;
-        if (intNode != null) {
-            radixNumber = intNode.getText();
-        }
-        if (radixNumber != null) {
-            Long bigInt = new Long(radixNumber);
-            return vm.setValue(bigInt);
-        } else {
-            BigDecimal bigDec = new BigDecimal(decimalNode.getText());
-            int precisionLength = bigDec.precision();
-            if (precisionLength < 8 && !Float.isInfinite(bigDec.floatValue())) {
-                return vm.setValue(bigDec.floatValue());
-            }
-            if (precisionLength < 16 && !Double.isInfinite(bigDec.doubleValue())) {
-                return vm.setValue(bigDec.doubleValue());
-            }
-            return vm.setValue(bigDec);
-        }
-    }
-
-    //  ( TRUE | FALSE)                 #booleanValue   // boolean 类型
-    @Override
-    public ValueModel visitBooleanValue(BooleanValueContext ctx) {
-        boolean boolValue = ctx.TRUE() != null;
-        return new ValueModel(boolValue);
-    }
-
-    // null
-    @Override
-    public ValueModel visitNullValue(NullValueContext ctx) {
-        return ValueModel.NULL;
     }
 
 

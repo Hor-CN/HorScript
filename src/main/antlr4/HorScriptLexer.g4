@@ -2,6 +2,7 @@ lexer grammar HorScriptLexer;
 
 /* key words 关键字*/
 VAR     : '赋值';
+GLOBAL  : '全局';
 IMPORT  : '导入';
 AS      : '为';
 ASSERT  : '断言';

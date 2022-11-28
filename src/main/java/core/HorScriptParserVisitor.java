@@ -93,6 +93,12 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitNoAssignment(HorScriptParser.NoAssignmentContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#globalAssignment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGlobalAssignment(HorScriptParser.GlobalAssignmentContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#idList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
