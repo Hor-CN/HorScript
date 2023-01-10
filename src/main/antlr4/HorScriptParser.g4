@@ -9,12 +9,13 @@ rootInstSet : importInst* blockSet EOF;
 importInst  : IMPORT ROU? STRING AS IDENTIFIER SEM?; // 导入 @'xxx.cn.itbk.horscript.core' as xx;
 
 /* 语句块 */
-blockSet    : ( statement | functionDecl )* ( RETURN anyObject (SEM)? )?;
+blockSet    : ( statement )* ( RETURN anyObject (SEM)? )?;
 
 statement
  : assignment SEM?
  | noAssignment SEM?
  | globalAssignment SEM?
+ | functionDecl
  | functionCall SEM?
  | systemFunction SEM?
  | ifStatement
@@ -44,7 +45,7 @@ globalAssignment : GLOBAL IDENTIFIER (ASS anyObject)?;
 
 // 函数参数列表
 idList     : IDENTIFIER ( COMMA IDENTIFIER )*; // a,b,c
-exprList   : expr ( COMMA expr )*;
+exprList   : anyObject ( COMMA anyObject )*;
 
 /* 列表结构 */
 listValue  : LSBT anyObject? (COMMA anyObject)* RSBT;

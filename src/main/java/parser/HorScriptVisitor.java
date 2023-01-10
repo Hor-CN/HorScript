@@ -1,5 +1,6 @@
 package parser;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
@@ -18,10 +19,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
@@ -31,6 +29,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     private final Map<String, Function> functions;
     // 对象
     private final Map<String, ObjectModel> objects;
+    // 返回值
     private static final ReturnValue returnValue = new ReturnValue();
 
     public HorScriptVisitor(Scope scope, Map<String, Function> functions){
@@ -46,15 +45,33 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     }
 
     // 语句块
-    // blockSet    : ( statement | functionDecl )* ( RETURN expr (SEM)? )?;
+    // blockSet    : ( statement )* ( RETURN expr (SEM)? )?;
     @Override
     public ValueModel visitBlockSet(BlockSetContext ctx) {
-        scope = new Scope(scope, false); // create new local scope
-        for (FunctionDeclContext fdx : ctx.functionDecl()) {
-            this.visit(fdx);
-        }
+        // 创建新的本地作用域
+        scope = new Scope(scope, false);
+        LinkedList<StatementContext> StackList = new LinkedList<>();
+        // 函数声明首先被提升，然后提升变量，其他不提升
+        // 函数声明首先提升
         for (StatementContext sx : ctx.statement()) {
-            this.visit(sx);
+            if (sx.functionDecl() != null) {
+                StackList.add(sx);
+            }
+        }
+        // 提升变量
+        for (StatementContext sx: ctx.statement()) {
+            if (sx.assignment() != null || sx.noAssignment() != null || sx.globalAssignment() != null) {
+                StackList.add(sx);
+            }
+        }
+        // 其他不提升
+        for (StatementContext sx: ctx.statement()) {
+            if (sx.functionDecl() == null && sx.assignment() == null && sx.noAssignment() == null && sx.globalAssignment() == null) {
+                StackList.add(sx);
+            }
+        }
+        for (StatementContext statementContext : StackList) {
+            this.visit(statementContext);
         }
         AnyObjectContext ex;
         if ((ex = ctx.anyObject()) != null) {
@@ -78,14 +95,14 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
             functions.put(id, visit.asFunction());
-            return ValueModel.VOID;
+//            return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
         // 如果是 object 进入 objects
         if (visit.isObjectModel()) {
 //            System.out.println(visit.asObjectModel().asOv());
             objects.put(id,visit.asObjectModel());
-            return ValueModel.VOID;
+//            return ValueModel.VOID;
         }
         scope.assign(id, visit);
         return ValueModel.VOID;
@@ -103,7 +120,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
             functions.put(id, visit.asFunction());
-            return ValueModel.VOID;
+//            return ValueModel.VOID;
+        }
+        if (visit.isObjectModel()) {
+            String id = ctx.IDENTIFIER().getText();
+            objects.put(id,visit.asObjectModel());
         }
         if (ctx.indexes() != null) {
             ValueModel val = scope.resolve(ctx.IDENTIFIER().getText());
@@ -122,7 +143,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         String id = ctx.IDENTIFIER().getText();
         if (!scope.isGlobalScope()) {
             if(ctx.anyObject() != null) {
-                scope.assign(id,this.visit(ctx.anyObject()));
+                if (scope.parent().isFunction()) {
+                    scope.parent().parent().assign(id,this.visit(ctx.anyObject()));
+
+                }else {
+                    scope.assign(id,this.visit(ctx.anyObject()));
+                }
             }else {
                 scope.assign(id, scope.resolve(id));
             }
@@ -137,6 +163,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         List<TerminalNode> params = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
         // 语句块
         ParseTree block = ctx.blockSet();
+
         Function function = new Function(scope, params, block);
         return new ValueModel(function);
     }
@@ -151,19 +178,20 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         if (functions.get(id) != null) {
             throw newParseException(ctx.start, "函数不可以重新定义");
         }
-        functions.put(id, new Function(scope, params, block));
+        Function function = new Function(scope, params, block);
+        functions.put(id, function);
         return ValueModel.VOID;
     }
 
     // 函数调用 functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?  // xx()
     @Override
     public ValueModel visitIdentifierFunctionCall(IdentifierFunctionCallContext ctx) {
-        List<ExprContext> params = ctx.exprList() != null ? ctx.exprList().expr() : new ArrayList<>();
+        List<AnyObjectContext> params = ctx.exprList() != null ? ctx.exprList().anyObject() : new ArrayList<>();
         String id = ctx.IDENTIFIER().getText() + params.size();
         Function function;
         if ((function = functions.get(id)) != null) {
             List<ValueModel> args = new ArrayList<>(params.size());
-            for (ExprContext param : params) {
+            for (AnyObjectContext param : params) {
                 args.add(this.visit(param));
             }
             ValueModel val = function.invoke(args, functions);
@@ -195,10 +223,10 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
     @Override
     public ValueModel visitFuncCallResult_call(FuncCallResult_callContext ctx) {
-        List<ExprContext> params = ctx.exprList() != null ? ctx.exprList().expr() : new ArrayList<>();
+        List<AnyObjectContext> params = ctx.exprList() != null ? ctx.exprList().anyObject() : new ArrayList<>();
         if (params != null) {
             List<ValueModel> args = new ArrayList<>(params.size());
-            for (ExprContext param : params) {
+            for (AnyObjectContext param : params) {
                 args.add(this.visit(param));
             }
             return new ValueModel(args);
@@ -220,6 +248,9 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitIdentifierExpr(IdentifierExprContext ctx) {
         String id = ctx.IDENTIFIER().getText();
         ValueModel val = scope.resolve(id);
+        if (val == null && objects.containsKey(id)) {
+            return new ValueModel(objects.get(id));
+        }
         if (ctx.indexes() != null) {
             List<ExprContext> exps = ctx.indexes().expr();
             val = resolveIndexes(val, exps);
@@ -227,39 +258,35 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return val;
     }
 
-//    @Override
-//    public ValueModel visitNameExprRoute(NameExprRouteContext ctx) {
-//        List<RouteNameContext> routeNameContexts = ctx.routeNameSet().routeName();
-////        List<RouteNameContext> restRoutNames =routeNameContexts.subList(1,routeNameContexts.size());
-//        String id = routeNameContexts.get(0).IDENTIFIER().getText();
-//        Map<String, DataModel> val = scope.resolve(id).asObjectModel().asOv();
-//        BeanPath resolver = new BeanPath("b.c");
-//        Object result = resolver.get(val);//ID为1
-//        System.out.println(result);
-////        for (RouteNameContext routeNameContext: restRoutNames) {
-////            if (!val.fieldNames().contains(routeNameContext.IDENTIFIER().getText())) {
-////                System.out.println("错误");
-////            }
-////            if (val.get(routeNameContext.IDENTIFIER().getText()).isObject()) {
-////                System.out.println(val.get(routeNameContext.IDENTIFIER().getText()));
-////            }
-////
-////        }
-//        return ValueModel.VOID;
-//    }
+
+    @Override
+    public ValueModel visitNameExprRoute(NameExprRouteContext ctx) {
+        List<RouteNameContext> routeNameContexts = ctx.routeNameSet().routeName();
+        List<RouteNameContext> restRoutNames =routeNameContexts.subList(1,routeNameContexts.size());
+        String id = routeNameContexts.get(0).IDENTIFIER().getText();
+        ObjectModel objectModel = objects.get(id);
+        ValueModel re = new ValueModel();
+        for (RouteNameContext routeNameContext: restRoutNames) {
+            if (!objectModel.isKey(routeNameContext.IDENTIFIER().getText())) {
+                System.out.println("错误");
+            }
+            ValueModel valueModel = (ValueModel) objectModel.get(routeNameContext.IDENTIFIER().getText());
+            if (valueModel.isObjectModel()) {
+                re.setValue(valueModel.asObjectModel().get(routeNameContext.IDENTIFIER().getText()));
+            }else {
+                re.setValue(objectModel.get(routeNameContext.IDENTIFIER().getText()));
+            }
+        }
+        return re;
+    }
 
     @Override
     public ValueModel visitObjectValue(ObjectValueContext ctx) {
         ObjectModel objectModel = new ObjectModel();
         for (ObjectKeyValueContext objectKeyValueContext : ctx.objectKeyValue()) {
             String key = objectKeyValueContext.IDENTIFIER().getText();
-            AnyObjectContext value = objectKeyValueContext.anyObject();
-            ObjectValueContext objectValueContext = objectKeyValueContext.anyObject().objectValue();
-            if (objectValueContext != null) {
-                ValueModel valueModel = visitObjectValue(objectValueContext);
-                objectModel.put(key, valueModel);
-            }
-            objectModel.put(key, this.visit(value));
+            ValueModel value = this.visit(objectKeyValueContext.anyObject());
+            objectModel.put(key,value);
         }
         return new ValueModel(objectModel);
     }
@@ -447,7 +474,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitPrintFunctionCall(PrintFunctionCallContext ctx) {
         if (ctx.exprList() != null) {
-            System.out.print(printStr(ctx.exprList().expr()));
+            System.out.print(printStr(ctx.exprList().anyObject()));
         } else System.out.println();
         return ValueModel.VOID;
     }
@@ -455,15 +482,15 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitPrintlnFunctionCall(PrintlnFunctionCallContext ctx) {
         if (ctx.exprList() != null) {
-            System.out.println(printStr(ctx.exprList().expr()));
+            System.out.println(printStr(ctx.exprList().anyObject()));
         } else System.out.println();
         return ValueModel.VOID;
     }
 
-    private String printStr(List<ExprContext> ctx) {
+    private String printStr(List<AnyObjectContext> ctx) {
         StringBuilder sBuffer = new StringBuilder();
         // 参数列表
-        for (ExprContext ex : ctx) {
+        for (AnyObjectContext ex : ctx) {
             try {
                 ValueModel content = this.visit(ex);
                 if (content.isNull()) {

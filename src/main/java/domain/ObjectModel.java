@@ -1,5 +1,7 @@
 package domain;
 
+import parser.Scope;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,6 +16,24 @@ public class ObjectModel implements DataModel {
 
     private  Map<String, DataModel> dataModel = new LinkedHashMap<>();
 
+    private final ObjectModel parent;
+
+    public ObjectModel() {
+        this.parent = null;
+    }
+
+    public ObjectModel(ObjectModel parent) {
+        this.parent = parent;
+    }
+
+    // 是否存在父对象
+    public boolean isGlobalObject() {
+        return parent != null;
+    }
+
+    public ObjectModel parent() {
+        return parent;
+    }
 
 
     public List<String> fieldNames() {

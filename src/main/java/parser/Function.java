@@ -1,8 +1,7 @@
 package parser;
 
 
-import cn.hutool.core.map.MapUtil;
-import domain.ObjectModel;
+import cn.hutool.core.collection.CollUtil;
 import domain.ValueModel;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -50,6 +49,11 @@ public class Function {
         return ret;
     }
 
-
-
+    @Override
+    public String toString() {
+        return "(" +
+                CollUtil.join(this.params, ",") + //str -> a,b,c +
+                ") => {" + block.getText() +
+                '}';
+    }
 }

@@ -44,6 +44,10 @@ public class Scope {
         return parent == null;
     }
 
+    public boolean isFunction() {
+        return isFunction;
+    }
+
     public Scope parent() {
         return parent;
     }
