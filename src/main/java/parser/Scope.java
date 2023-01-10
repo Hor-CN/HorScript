@@ -40,8 +40,12 @@ public class Scope {
         }
     }
 
+    /**
+     * 是否存在父作用域
+     * @return boolean
+     */
     public boolean isGlobalScope() {
-        return parent == null;
+        return parent != null;
     }
 
     public boolean isFunction() {
@@ -58,23 +62,25 @@ public class Scope {
             variables.put(identifier, value);
         }
         else if(parent != null) {
-            // The variable was not declared in this scope, so let
-            // the parent scope re-assign it
+            // The variable was not declared in this scope, so let the parent scope re-assign it
             parent.reAssign(identifier, value);
         }
     }
 
     public ValueModel resolve(String var) {
+        // 检查父作用域
         return resolve(var, true);
     }
 
     private ValueModel resolve(String var, boolean checkParent) {
         ValueModel value = variables.get(var);
+        // 当前作用域存在直接返回
         if(value != null) {
             // The variable resides in this scope
             return value;
         }
-        else if(checkParent && !isGlobalScope()) {
+        //  是否检查父作用域，是否存在父作用域
+        else if(checkParent && isGlobalScope()) {
             // Let the parent scope look for the variable
             return parent.resolve(var, parent.isFunction);
         }

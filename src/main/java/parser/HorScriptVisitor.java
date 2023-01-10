@@ -1,6 +1,5 @@
 package parser;
 
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
@@ -50,29 +49,28 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitBlockSet(BlockSetContext ctx) {
         // 创建新的本地作用域
         scope = new Scope(scope, false);
-        LinkedList<StatementContext> StackList = new LinkedList<>();
+//        LinkedList<StatementContext> StackList = new LinkedList<>();
         // 函数声明首先被提升，然后提升变量，其他不提升
         // 函数声明首先提升
         for (StatementContext sx : ctx.statement()) {
             if (sx.functionDecl() != null) {
-                StackList.add(sx);
+//                StackList.add(sx);
+                this.visit(sx);
             }
         }
         // 提升变量
         for (StatementContext sx: ctx.statement()) {
             if (sx.assignment() != null || sx.noAssignment() != null || sx.globalAssignment() != null) {
-                StackList.add(sx);
+                this.visit(sx);
             }
         }
         // 其他不提升
         for (StatementContext sx: ctx.statement()) {
             if (sx.functionDecl() == null && sx.assignment() == null && sx.noAssignment() == null && sx.globalAssignment() == null) {
-                StackList.add(sx);
+                this.visit(sx);
             }
         }
-        for (StatementContext statementContext : StackList) {
-            this.visit(statementContext);
-        }
+
         AnyObjectContext ex;
         if ((ex = ctx.anyObject()) != null) {
             returnValue.value = this.visit(ex);
@@ -141,7 +139,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitGlobalAssignment(GlobalAssignmentContext ctx) {
         String id = ctx.IDENTIFIER().getText();
-        if (!scope.isGlobalScope()) {
+        if (scope.isGlobalScope()) {
             if(ctx.anyObject() != null) {
                 if (scope.parent().isFunction()) {
                     scope.parent().parent().assign(id,this.visit(ctx.anyObject()));
