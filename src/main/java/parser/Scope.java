@@ -1,6 +1,7 @@
 package parser;
 
 import domain.ValueModel;
+import domain.VariableModel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,27 +11,50 @@ import java.util.Map;
  */
 public class Scope {
 
+    /**
+     * 父作用域
+     */
     private final Scope parent;
-    private final Map<String, ValueModel> variables;
-    private final boolean isFunction;
+    /**
+     * 变量
+     */
+    private final Map<VariableModel, ValueModel> variables;
+    /**
+     * 是否是局部作用域
+     */
+    private final boolean isLocalScope;
 
     public Scope() {
         // only for the global scope, the parent is null
         this(null, false);
     }
 
-    public Scope(Scope p, boolean function) {
-        parent = p;
-        variables = new HashMap<>();
-        isFunction = function;
+    public Scope(Scope parent, boolean localScope) {
+        this.parent = parent;
+        this.variables = new HashMap<>();
+        this.isLocalScope = localScope;
     }
 
-    public void assignParam(String var, ValueModel value) {
+
+    public void assignParam(VariableModel var, ValueModel value) {
         variables.put(var, value);
     }
 
-    public void assign(String var, ValueModel value) {
-        if(resolve(var, !isFunction) != null) {
+    public void localAssign(VariableModel var, ValueModel value) {
+        this.assignParam(var, value);
+    }
+
+    public void globalAssign(VariableModel var,ValueModel value) {
+        if (!isLocalScope) {
+            variables.put(var, value);
+        }else {
+            parent.globalAssign(var, value);
+        }
+    }
+
+
+    public void assign(VariableModel var, ValueModel value) {
+        if(resolve(var, isLocalScope) != null) {
             // There is already such a variable, re-assign it
             this.reAssign(var, value);
         }
@@ -38,6 +62,17 @@ public class Scope {
             // A newly declared variable
             variables.put(var, value);
         }
+    }
+
+
+
+
+    /**
+     * 获取父作用域
+     * @return Scope
+     */
+    public Scope parent() {
+        return parent;
     }
 
     /**
@@ -48,15 +83,16 @@ public class Scope {
         return parent != null;
     }
 
-    public boolean isFunction() {
-        return isFunction;
+    /**
+     * 是否是局部作用域
+     * @return boolean
+     */
+    public boolean isLocalScope() {
+        return isLocalScope;
     }
 
-    public Scope parent() {
-        return parent;
-    }
 
-    private void reAssign(String identifier, ValueModel value) {
+    private void reAssign(VariableModel identifier, ValueModel value) {
         if(variables.containsKey(identifier)) {
             // The variable is declared in this scope
             variables.put(identifier, value);
@@ -67,22 +103,22 @@ public class Scope {
         }
     }
 
-    public ValueModel resolve(String var) {
+    public ValueModel resolve(VariableModel var) {
         // 检查父作用域
         return resolve(var, true);
     }
 
-    private ValueModel resolve(String var, boolean checkParent) {
+    private ValueModel resolve(VariableModel var, boolean checkParent) {
+        // 获取当前作用域下变量表
         ValueModel value = variables.get(var);
-        // 当前作用域存在直接返回
+        // 变量存在于当前作用域直接返回
         if(value != null) {
-            // The variable resides in this scope
             return value;
         }
         //  是否检查父作用域，是否存在父作用域
         else if(checkParent && isGlobalScope()) {
             // Let the parent scope look for the variable
-            return parent.resolve(var, parent.isFunction);
+            return parent.resolve(var, parent.isLocalScope);
         }
         else {
             // Unknown variable
@@ -93,7 +129,7 @@ public class Scope {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for(Map.Entry<String,ValueModel> var: variables.entrySet()) {
+        for(Map.Entry<VariableModel,ValueModel> var: variables.entrySet()) {
             sb.append(var.getKey()).append("->").append(var.getValue()).append(",");
         }
         return sb.toString();

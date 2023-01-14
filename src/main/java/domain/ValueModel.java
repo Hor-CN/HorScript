@@ -1,16 +1,12 @@
 package domain;
 
-import core.HorScriptParser;
 import parser.Function;
 import utils.NumberUtils;
 import utils.OperatorUtils;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
 
 public class ValueModel implements Comparable<ValueModel>,DataModel{
-
 
     public static ValueModel NULL  = new ValueModel("空");
     public static final ValueModel VOID = new ValueModel();
