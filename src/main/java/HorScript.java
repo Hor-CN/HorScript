@@ -1,6 +1,5 @@
 import core.HorScriptLexer;
 import core.HorScriptParser;
-import domain.DataModel;
 import domain.ObjectModel;
 import exception.ThrowingErrorListener;
 import exception.VisitorException;
@@ -61,7 +60,7 @@ public class HorScript {
             parser.removeErrorListeners();
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.rootInstSet();
-            Scope scope = new Scope();
+            Scope scope = new Scope(null,false);
             Map<String, Function> functions = Collections.emptyMap();
             Map<String, ObjectModel> objects = Collections.emptyMap();
             HorScriptVisitor visitor = new HorScriptVisitor(scope,functions, objects);

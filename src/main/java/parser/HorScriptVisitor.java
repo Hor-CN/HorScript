@@ -1,6 +1,5 @@
 package parser;
 
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
@@ -8,10 +7,7 @@ import cn.hutool.core.util.NumberUtil;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
 import core.HorScriptParserBaseVisitor;
-import domain.DataModel;
-import domain.ListModel;
-import domain.ObjectModel;
-import domain.ValueModel;
+import domain.*;
 import exception.VisitorException;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -48,38 +44,51 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // blockSet    : ( statement )* ( RETURN expr (SEM)? )?;
     @Override
     public ValueModel visitBlockSet(BlockSetContext ctx) {
-        // 创建新的本地作用域
-        scope = new Scope(scope, false);
-        LinkedList<StatementContext> StackList = new LinkedList<>();
+
+        ArrayDeque<StatementContext> Stack = new ArrayDeque<>();
+        ArrayDeque<StatementContext> Stack1 = new ArrayDeque<>();
+        ArrayDeque<StatementContext> Stack2 = new ArrayDeque<>();
+
         // 函数声明首先被提升，然后提升变量，其他不提升
-        // 函数声明首先提升
         for (StatementContext sx : ctx.statement()) {
+            // 函数声明首先提升
             if (sx.functionDecl() != null) {
-                StackList.add(sx);
+                Stack.add(sx);
+            }
+            // 提升变量声明
+            else if (sx.assignment() != null) {
+                Stack1.add(sx);
+            }
+            // 其他不提升
+            else {
+                Stack2.add(sx);
             }
         }
-        // 提升变量
-        for (StatementContext sx: ctx.statement()) {
-            if (sx.assignment() != null || sx.noAssignment() != null || sx.globalAssignment() != null) {
-                StackList.add(sx);
-            }
-        }
-        // 其他不提升
-        for (StatementContext sx: ctx.statement()) {
-            if (sx.functionDecl() == null && sx.assignment() == null && sx.noAssignment() == null && sx.globalAssignment() == null) {
-                StackList.add(sx);
-            }
-        }
-        for (StatementContext statementContext : StackList) {
+
+        Stack.addAll(Stack1);
+        Stack.addAll(Stack2);
+        Stack1.clear();
+        Stack2.clear();
+
+        for (StatementContext statementContext : Stack) {
             this.visit(statementContext);
         }
+
+        //如果是局部作用域则继续创建下层作用域，否则使用全局作用域
+        if (scope.isLocalScope()) {
+            scope = new Scope(scope, true);
+        }
+
+        // 返回内容时
         AnyObjectContext ex;
         if ((ex = ctx.anyObject()) != null) {
             returnValue.value = this.visit(ex);
+            // 当返回内容时作用域上移一层，也就是将当前的局部作用域摧毁。
             scope = scope.parent();
+            // 销毁运行函数的解析器
             throw returnValue;
         }
-        scope = scope.parent();
+        //scope = scope.parent();
         return ValueModel.VOID;
     }
 
@@ -95,16 +104,17 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
             functions.put(id, visit.asFunction());
-//            return ValueModel.VOID;
         }
         String id = ctx.IDENTIFIER().getText();
+        VariableModel variableModel = new VariableModel(id);
         // 如果是 object 进入 objects
         if (visit.isObjectModel()) {
 //            System.out.println(visit.asObjectModel().asOv());
             objects.put(id,visit.asObjectModel());
 //            return ValueModel.VOID;
         }
-        scope.assign(id, visit);
+        variableModel.setGlobal(!scope.isLocalScope());
+        scope.localAssign(variableModel, visit);
         return ValueModel.VOID;
     }
 
@@ -127,30 +137,40 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             objects.put(id,visit.asObjectModel());
         }
         if (ctx.indexes() != null) {
-            ValueModel val = scope.resolve(ctx.IDENTIFIER().getText());
+            ValueModel val = scope.resolve(new VariableModel(ctx.IDENTIFIER().getText()));
             List<ExprContext> exps = ctx.indexes().expr();
             setAtIndex(ctx, exps, val, visit);
         } else {
             String id = ctx.IDENTIFIER().getText();
-            scope.assign(id, visit);
+            if (scope.isLocalScope()) {
+                scope.localAssign(new VariableModel(id), visit);
+            }else {
+                scope.assign(new VariableModel(id), visit);
+            }
         }
         return ValueModel.VOID;
     }
 
-    // 访问父作用域
+
+    @Override
+    public ValueModel visitMultivariable(MultivariableContext ctx) {
+        for (VariableContext variableContext : ctx.variable()) {
+            VariableModel variableModel = new VariableModel(variableContext.IDENTIFIER().getText());
+            variableModel.setGlobal(!scope.isLocalScope());
+            if (scope.resolve(variableModel) == null) {
+                scope.localAssign(variableModel, variableContext.anyObject() == null ? ValueModel.NULL : this.visit(variableContext.anyObject()));
+            }
+        }
+        return ValueModel.VOID;
+    }
+
+    // 访问全局作用域
     @Override
     public ValueModel visitGlobalAssignment(GlobalAssignmentContext ctx) {
         String id = ctx.IDENTIFIER().getText();
-        if (!scope.isGlobalScope()) {
+        if (scope.isGlobalScope()) {
             if(ctx.anyObject() != null) {
-                if (scope.parent().isFunction()) {
-                    scope.parent().parent().assign(id,this.visit(ctx.anyObject()));
-
-                }else {
-                    scope.assign(id,this.visit(ctx.anyObject()));
-                }
-            }else {
-                scope.assign(id, scope.resolve(id));
+                scope.globalAssign(new VariableModel(id),this.visit(ctx.anyObject()));
             }
         }
         return ValueModel.VOID;
@@ -167,6 +187,8 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         Function function = new Function(scope, params, block);
         return new ValueModel(function);
     }
+
+
 
     // visitFunctionDecl 函数声明
     @Override
@@ -247,7 +269,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitIdentifierExpr(IdentifierExprContext ctx) {
         String id = ctx.IDENTIFIER().getText();
-        ValueModel val = scope.resolve(id);
+        ValueModel val = scope.resolve(new VariableModel(id));
         if (val == null && objects.containsKey(id)) {
             return new ValueModel(objects.get(id));
         }
@@ -412,7 +434,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 try {
                     if (rhs.isList()) {
                         for (DataModel val : rhs.asList().asOv()) {
-                            scope.assign(ctx.IDENTIFIER().getText(), new ValueModel(val.asT()));
+                            scope.assign(new VariableModel(ctx.IDENTIFIER().getText()), new ValueModel(val.asT()));
                             ValueModel returnValue = this.visit(ctx.blockSet());
                             if (returnValue != ValueModel.VOID) {
                                 return returnValue;
@@ -428,7 +450,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 int start = lhs.asInt();
                 int stop = rhs.asInt();
                 for (int i = start; i <= stop; i++) {
-                    scope.assign(ctx.IDENTIFIER().getText(), new ValueModel(i));
+                    scope.assign(new VariableModel(ctx.IDENTIFIER().getText()), new ValueModel(i));
                     ValueModel returnValue = this.visit(ctx.blockSet());
                     if (returnValue != ValueModel.VOID) {
                         return returnValue;
@@ -501,7 +523,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 }
                 sBuffer.append(content.asString());
             }catch (NullPointerException e) {
-                throw newParseException(ex.start, "空指针异常：" + ex.getText());
+                throw newParseException(ex.start, "未定义：" + ex.getText());
             }
         }
         return sBuffer.toString();

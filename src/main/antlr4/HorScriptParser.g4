@@ -14,6 +14,7 @@ blockSet    : ( statement )* ( RETURN anyObject (SEM)? )?;
 statement
  : assignment SEM?
  | noAssignment SEM?
+ | multivariable SEM?
  | globalAssignment SEM?
  | functionDecl
  | functionCall SEM?
@@ -39,8 +40,10 @@ objectValue     : OCBR objectKeyValue? ( COMMA objectKeyValue)* CCBR;
 objectKeyValue  : IDENTIFIER ( COLON anyObject)?;
 
 /* 赋值 */
-assignment : VAR IDENTIFIER ASS anyObject;
-noAssignment: IDENTIFIER indexes? ASS anyObject;
+assignment       : VAR IDENTIFIER ASS anyObject;
+multivariable    : VAR  variable ( COMMA variable)*;
+variable         : IDENTIFIER (ASS anyObject)?;
+noAssignment     : IDENTIFIER indexes? ASS anyObject;
 globalAssignment : GLOBAL IDENTIFIER (ASS anyObject)?;
 
 // 函数参数列表

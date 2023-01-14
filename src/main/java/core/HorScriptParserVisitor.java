@@ -87,6 +87,18 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAssignment(HorScriptParser.AssignmentContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#multivariable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMultivariable(HorScriptParser.MultivariableContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#variable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariable(HorScriptParser.VariableContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#noAssignment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

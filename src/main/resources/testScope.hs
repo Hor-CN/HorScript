@@ -23,9 +23,25 @@ myFunction1() // 函数内声明的全局变量需要先调用函数使其生效
 }
 
 // 在全局作用域下使用全局关键字声明变量 = 使用赋值关键字 为全局变量 （全局 a = ？ == 赋值 a = ？）
-打印换行("myFunction2 函数外可调用全局 car2 变量:",car2) // 变量声明会被提升
+
 全局 car2 = "赤兔马";
 函数 myFunction2() {
     打印换行("myFunction2 函数内可调用全局 car2 变量:",car2)
 }
 myFunction2()
+
+
+
+赋值 a = 123
+函数 x() {
+    全局 b = 456
+    函数 x1() {
+        全局 c = 789
+
+    }
+    x1()
+}
+x()
+打印换行("Below the function: ",a)
+打印换行("Below the function: ",b)
+打印换行("Below the function: ",c)

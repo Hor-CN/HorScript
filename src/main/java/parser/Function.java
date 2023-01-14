@@ -3,6 +3,7 @@ package parser;
 
 import cn.hutool.core.collection.CollUtil;
 import domain.ValueModel;
+import domain.VariableModel;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -37,7 +38,7 @@ public class Function {
         Scope scopeNext = new Scope(parentScope, true);
         for (int i = 0; i < this.params.size(); i++) {
             ValueModel value = args.get(i);
-            scopeNext.assignParam(this.params.get(i).getText(), value);
+            scopeNext.assignParam(new VariableModel(this.params.get(i).getText()), value);
         }
         HorScriptVisitor evalVisitorNext = new HorScriptVisitor(scopeNext,functions);
         ValueModel ret = ValueModel.VOID;
