@@ -78,7 +78,7 @@ fragment DIGIT: [0-9];
 
 
 /* 标识符 */
-IDENTIFIER      : [a-zA-Z_] [a-zA-Z_0-9]*;
+IDENTIFIER      : [a-zA-Z_\u4e00-\u9fa5] [a-zA-Z_0-9\u4e00-\u9fa5]*;
 
 /* skip spaces */
 Space   : [ \t\n\r\u000C] -> skip; // (空格\水平制表符\换行\回车\换页)
