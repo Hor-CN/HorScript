@@ -96,22 +96,22 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitAssignment(AssignmentContext ctx) {
         ValueModel visit = this.visit(ctx.anyObject());
+        String id = ctx.IDENTIFIER().getText();
+        VariableModel variableModel = new VariableModel(id);
         // 如果是 lambda 函数 加入 functions
         if (visit.isFunction()) {
-            String id = ctx.IDENTIFIER().getText() + visit.asFunction().getParams().size();
+            id += visit.asFunction().getParams().size();
             // 函数已经定义抛出异常
             if (functions.get(id) != null) {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
             functions.put(id, visit.asFunction());
+            variableModel.setType(ModelType.function);
         }
-        String id = ctx.IDENTIFIER().getText();
-        VariableModel variableModel = new VariableModel(id);
         // 如果是 object 进入 objects
         if (visit.isObjectModel()) {
-//            System.out.println(visit.asObjectModel().asOv());
             objects.put(id,visit.asObjectModel());
-//            return ValueModel.VOID;
+            variableModel.setType(ModelType.Object);
         }
         variableModel.setGlobal(!scope.isLocalScope());
         scope.localAssign(variableModel, visit);
@@ -122,30 +122,31 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     @Override
     public ValueModel visitNoAssignment(NoAssignmentContext ctx) {
         ValueModel visit = this.visit(ctx.anyObject());
+        String id = ctx.IDENTIFIER().getText();
+        VariableModel variableModel = new VariableModel(id);
         // 如果是 lambda 函数 加入 functions
         if (visit.isFunction()) {
-            String id = ctx.IDENTIFIER().getText() + visit.asFunction().getParams().size();
+            id +=  visit.asFunction().getParams().size();
             // 函数已经定义抛出异常
             if (functions.get(id) != null) {
                 throw newParseException(ctx.start, "函数不可以重新定义");
             }
             functions.put(id, visit.asFunction());
-//            return ValueModel.VOID;
+            variableModel.setType(ModelType.function);
         }
         if (visit.isObjectModel()) {
-            String id = ctx.IDENTIFIER().getText();
             objects.put(id,visit.asObjectModel());
+            variableModel.setType(ModelType.Object);
         }
         if (ctx.indexes() != null) {
-            ValueModel val = scope.resolve(new VariableModel(ctx.IDENTIFIER().getText()));
+            ValueModel val = scope.resolve(variableModel);
             List<ExprContext> exps = ctx.indexes().expr();
             setAtIndex(ctx, exps, val, visit);
         } else {
-            String id = ctx.IDENTIFIER().getText();
             if (scope.isLocalScope()) {
-                scope.localAssign(new VariableModel(id), visit);
+                scope.localAssign(variableModel, visit);
             }else {
-                scope.assign(new VariableModel(id), visit);
+                scope.assign(variableModel, visit);
             }
         }
         return ValueModel.VOID;
@@ -200,8 +201,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         if (functions.get(id) != null) {
             throw newParseException(ctx.start, "函数不可以重新定义");
         }
+        VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
         Function function = new Function(scope, params, block);
+        function.setIdentifier(ctx.IDENTIFIER().getText());
         functions.put(id, function);
+        variableModel.setType(ModelType.function);
+        variableModel.setGlobal(!scope.isLocalScope());
+        scope.localAssign(variableModel, new ValueModel(function));
         return ValueModel.VOID;
     }
 
@@ -240,7 +246,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             }
             return val;
         }
-        throw newParseException(ctx.start, ctx.getText());
+        throw newParseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
     }
 
     @Override

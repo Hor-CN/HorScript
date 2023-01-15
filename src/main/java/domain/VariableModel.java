@@ -11,6 +11,7 @@ public class VariableModel {
 
     private String key;
     private boolean global;
+    private ModelType type = ModelType.value;
 
     public VariableModel(String key) {
         this.key = key;
@@ -36,6 +37,15 @@ public class VariableModel {
 
     public void setGlobal(boolean global) {
         this.global = global;
+    }
+
+
+    public ModelType getType() {
+        return type;
+    }
+
+    public void setType(ModelType type) {
+        this.type = type;
     }
 
     @Override

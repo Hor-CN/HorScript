@@ -1,7 +1,5 @@
 package domain;
 
-import parser.Scope;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +12,7 @@ import java.util.Map;
  */
 public class ObjectModel implements DataModel {
 
-    private  Map<String, DataModel> dataModel = new LinkedHashMap<>();
+    private final Map<String, DataModel> dataModel = new LinkedHashMap<>();
 
     private final ObjectModel parent;
 
