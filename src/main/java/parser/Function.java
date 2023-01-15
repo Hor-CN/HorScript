@@ -16,6 +16,9 @@ public class Function {
     private final List<TerminalNode> params;
     private final ParseTree block;
 
+    private String Identifier = null;
+
+
     Function(Scope parentScope, List<TerminalNode> params, ParseTree block) {
         this.parentScope = parentScope;
         this.params = params;
@@ -24,6 +27,10 @@ public class Function {
 
     public List<TerminalNode> getParams() {
         return params;
+    }
+
+    public void setIdentifier(String identifier) {
+        Identifier = identifier;
     }
 
     public ParseTree getBlock() {
@@ -52,9 +59,13 @@ public class Function {
 
     @Override
     public String toString() {
+        if (this.Identifier != null) {
+            return "函数" + Identifier + " (" + CollUtil.join(this.params, ",") + ") {\n" +
+                    block.getText() + "\n}";
+        }
         return "(" +
                 CollUtil.join(this.params, ",") + //str -> a,b,c +
-                ") => {" + block.getText() +
-                '}';
+                ") => { " + block.getText() +
+                " }";
     }
 }

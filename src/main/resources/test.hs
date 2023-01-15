@@ -1,5 +1,5 @@
 // 打印("列表Test: ",[123,'你好',[1,2,3]])
-/*
+
 赋值 a = [1,2,3];
 打印(a[0])
 赋值 b = [1,2,3];
@@ -12,7 +12,7 @@ c = 132;
 赋值 d = 10;
 如果(d < 10){
     打印('hello');
-}否则 如果(a <= 10 ){
+}否则 如果(a[1] <= 10 ){
     打印("结果：",'world')
 }
 循环(a=1 到 10) {
@@ -55,7 +55,6 @@ lambdaTest("The lambda function"," was tested successfully!")
     i = i + 1;
 }判断循环(i <= 10)
 
-打印("123")打印("123")
 赋值 a = {
     b: 123,
     c: "456"
@@ -72,6 +71,5 @@ lambdaTest("The lambda function"," was tested successfully!")
     }
 }
 打印("the Object: ",x.b.c)
-*/
 赋值 a = [1,2,3,"zf"]
 打印(a)
