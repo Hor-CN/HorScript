@@ -1,8 +1,5 @@
 package parser;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.lang.TypeReference;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.NumberUtil;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
@@ -15,25 +12,19 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
     // 作用域
     private Scope scope;
-    // 对象
-    private final Map<String, ObjectModel> objects;
     // 返回值
     private static final ReturnValue returnValue = new ReturnValue();
 
     public HorScriptVisitor(Scope scope) {
         this.scope = scope;
-        this.objects = MapUtil.empty();
-    }
-
-    public HorScriptVisitor(Scope scope, Map<String, ObjectModel> objects) {
-        this.scope = scope;
-        this.objects = new HashMap<>(objects);
     }
 
     // 语句块
@@ -100,7 +91,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         }
         // 如果是 object 进入 objects
         if (visit.isObjectModel()) {
-            objects.put(id, visit.asObjectModel());
+//            objects.put(id, visit.asObjectModel());
             variableModel.setType(ModelType.Object);
         }
         variableModel.setGlobal(!scope.isLocalScope());
@@ -119,7 +110,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             variableModel.setType(ModelType.function);
         }
         if (visit.isObjectModel()) {
-            objects.put(id, visit.asObjectModel());
+//            objects.put(id, visit.asObjectModel());
             variableModel.setType(ModelType.Object);
         }
         if (ctx.indexes() != null) {
@@ -161,11 +152,23 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         return ValueModel.VOID;
     }
 
+    // 显式参数在函数定义时列出 (a,b,c)
+    @Override
+    public ValueModel visitExplicitParameter(ExplicitParameterContext ctx) {
+        return new ValueModel(ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>());
+    }
+
+    // 隐式参数在函数调用时传递给函数真正的值。 12,23
+    @Override
+    public ValueModel visitImplicitParameter(ImplicitParameterContext ctx) {
+        return new ValueModel(ctx.exprList() != null ? ctx.exprList().anyObject() : new ArrayList<>());
+    }
+
     // Lambda 函数声明 (a,b) => {}
     @Override
     public ValueModel visitLambdaDef(LambdaDefContext ctx) {
         // 参数列表
-        List<TerminalNode> params = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
+        List<TerminalNode> params = this.visit(ctx.explicitParameter()).asExplicitParameter();
         // 语句块
         ParseTree block = ctx.blockSet();
 
@@ -177,7 +180,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // visitFunctionDecl 函数声明
     @Override
     public ValueModel visitFunctionDecl(FunctionDeclContext ctx) {
-        List<TerminalNode> params = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
+        List<TerminalNode> params = this.visit(ctx.explicitParameter()).asExplicitParameter();
         ParseTree block = ctx.blockSet();
         String id = ctx.IDENTIFIER().getText();
         VariableModel variableModel = new VariableModel(id);
@@ -192,100 +195,71 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     // 函数调用 functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?  // xx()
     @Override
     public ValueModel visitIdentifierFunctionCall(IdentifierFunctionCallContext ctx) {
-        List<AnyObjectContext> params = ctx.exprList() != null ? ctx.exprList().anyObject() : new ArrayList<>();
         VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
-        ValueModel fn = scope.resolve(variableModel);
-        if (!fn.isFunction()) {
+        ValueModel valueModel = scope.resolve(variableModel);
+        if (!valueModel.isFunction()) {
             throw newParseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
         }
-        Function function = fn.asFunction();
-        List<ValueModel> args = new ArrayList<>(params.size());
-        for (AnyObjectContext param : params) {
-            args.add(this.visit(param));
-        }
-        ValueModel val = function.invoke(args);
-        if (val.isString() || val.isList() || val.isObjectModel()) {
-            // funcCallResult_route1
-            FunctionCallResultContext functionCallResultContext = ctx.functionCallResult();
-            if (functionCallResultContext != null) {
-                ValueModel visit = this.visit(functionCallResultContext);
-                List<ExprContext> exps = Convert.convert(new TypeReference<List<ExprContext>>() {
-                }, visit.asOv());
-                val = resolveIndexes(val, exps);
-                return val;
+        if (ctx.implicitParameter() != null) {
+            for (ImplicitParameterContext implicitParameterContext : ctx.implicitParameter()) {
+                List<ValueModel> args = this.visit(implicitParameterContext).asImplicitParameter();
+                if (valueModel.isFunction()) {
+                    valueModel = valueModel.asFunction().invoke(args);
+                } else {
+                    throw newParseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
+                }
             }
         }
-        if (val.isFunction()) {
-            FunctionCallResultContext functionCallResultContext = ctx.functionCallResult();
-            if (functionCallResultContext != null) {
-                ValueModel visit = this.visit(functionCallResultContext);
-                List<ValueModel> _args = Convert.convert(new TypeReference<List<ValueModel>>() {
-                }, visit.asOv());
-                return val.asFunction().invoke(_args);
-            }
-
-        }
-        return val;
-
+        return valueModel;
     }
 
     @Override
-    public ValueModel visitFuncCallResult_call(FuncCallResult_callContext ctx) {
-        List<AnyObjectContext> params = ctx.exprList() != null ? ctx.exprList().anyObject() : new ArrayList<>();
-        if (params != null) {
-            List<ValueModel> args = new ArrayList<>(params.size());
-            for (AnyObjectContext param : params) {
-                args.add(this.visit(param));
+    public ValueModel visitIdentifierExprRoute(IdentifierExprRouteContext ctx) {
+
+        if (ctx.routeNameSet().DOT().isEmpty()) {
+            return this.visit(ctx.routeNameSet().routeName().get(0));
+        }
+
+        ValueModel valueModel = null;
+        for (RouteNameContext routeNameContext : ctx.routeNameSet().routeName()) {
+            if (valueModel == null) {
+                valueModel = this.visit(routeNameContext);
+            } else {
+                if (valueModel.isObjectModel()) {
+                    valueModel = (ValueModel) valueModel.asObjectModel().get(routeNameContext.IDENTIFIER().getText());
+                    if (valueModel.isFunction()) {
+                        if (routeNameContext.implicitParameter() != null) {
+                            for (ImplicitParameterContext implicitParameterContext : routeNameContext.implicitParameter()) {
+                                List<ValueModel> args = this.visit(implicitParameterContext).asImplicitParameter();
+                                if (valueModel.isFunction()) {
+                                    valueModel = valueModel.asFunction().invoke(args);
+                                } else {
+                                    throw newParseException(ctx.start, ctx.getText() + " 不是一个函数");
+                                }
+                            }
+                        }
+                        return valueModel;
+                    }
+                } else {
+                    throw newParseException(ctx.start, routeNameContext.IDENTIFIER() + " 无法读取此未知对象");
+                }
             }
-            return new ValueModel(args);
         }
-        return ValueModel.VOID;
+
+        return valueModel;
     }
 
-    @Override
-    public ValueModel visitFuncCallResult_route1(FuncCallResult_route1Context ctx) {
-        if (ctx.indexes() != null) {
-            List<ExprContext> exps = ctx.indexes().expr();
-            return new ValueModel(exps);
-        }
-        return ValueModel.VOID;
-    }
 
-    // IDENTIFIER indexes?                                        #identifierExpr
+    // IDENTIFIER indexes?
     @Override
-    public ValueModel visitIdentifierExpr(IdentifierExprContext ctx) {
+    public ValueModel visitRouteName(RouteNameContext ctx) {
         String id = ctx.IDENTIFIER().getText();
         ValueModel val = scope.resolve(new VariableModel(id));
-        if (val == null && objects.containsKey(id)) {
-            return new ValueModel(objects.get(id));
-        }
         if (ctx.indexes() != null) {
             List<ExprContext> exps = ctx.indexes().expr();
             val = resolveIndexes(val, exps);
         }
         return val;
-    }
-
-
-    @Override
-    public ValueModel visitNameExprRoute(NameExprRouteContext ctx) {
-        List<RouteNameContext> routeNameContexts = ctx.routeNameSet().routeName();
-        List<RouteNameContext> restRoutNames = routeNameContexts.subList(1, routeNameContexts.size());
-        String id = routeNameContexts.get(0).IDENTIFIER().getText();
-        ObjectModel objectModel = objects.get(id);
-        ValueModel re = new ValueModel();
-        for (RouteNameContext routeNameContext : restRoutNames) {
-            if (!objectModel.isKey(routeNameContext.IDENTIFIER().getText())) {
-                System.out.println("错误");
-            }
-            ValueModel valueModel = (ValueModel) objectModel.get(routeNameContext.IDENTIFIER().getText());
-            if (valueModel.isObjectModel()) {
-                re.setValue(valueModel.asObjectModel().get(routeNameContext.IDENTIFIER().getText()));
-            } else {
-                re.setValue(objectModel.get(routeNameContext.IDENTIFIER().getText()));
-            }
-        }
-        return re;
     }
 
     @Override

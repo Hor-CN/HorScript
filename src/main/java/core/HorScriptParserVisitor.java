@@ -136,12 +136,12 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIdentifierExpr(HorScriptParser.IdentifierExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code nameExprRoute}
+	 * Visit a parse tree produced by the {@code identifierExprRoute}
 	 * labeled alternative in {@link HorScriptParser#routerMapping}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitNameExprRoute(HorScriptParser.NameExprRouteContext ctx);
+	T visitIdentifierExprRoute(HorScriptParser.IdentifierExprRouteContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code listRoute}
 	 * labeled alternative in {@link HorScriptParser#routerMapping}.
@@ -174,6 +174,18 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIndexes(HorScriptParser.IndexesContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#implicitParameter}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitImplicitParameter(HorScriptParser.ImplicitParameterContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#explicitParameter}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExplicitParameter(HorScriptParser.ExplicitParameterContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#ifStatement}.
 	 * @param ctx the parse tree
@@ -235,27 +247,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIdentifierFunctionCall(HorScriptParser.IdentifierFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code systemFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#functionCall}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSystemFunctionCall(HorScriptParser.SystemFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code funcCallResult_route1}
-	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncCallResult_route1(HorScriptParser.FuncCallResult_route1Context ctx);
-	/**
-	 * Visit a parse tree produced by the {@code funcCallResult_call}
-	 * labeled alternative in {@link HorScriptParser#functionCallResult}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncCallResult_call(HorScriptParser.FuncCallResult_callContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code printFunctionCall}
 	 * labeled alternative in {@link HorScriptParser#systemFunction}.

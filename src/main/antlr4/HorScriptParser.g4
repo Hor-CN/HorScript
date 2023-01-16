@@ -54,8 +54,8 @@ exprList   : anyObject ( COMMA anyObject )*;
 listValue  : LSBT anyObject? (COMMA anyObject)* RSBT;
 
 /* 路由映射 */
-routerMapping : IDENTIFIER indexes?                       #identifierExpr
-              | routeNameSet                              #nameExprRoute // 表达式（访问符 -> 子元素）
+routerMapping : routeName                                 #identifierExpr
+              | routeNameSet                              #identifierExprRoute // 表达式（访问符 -> 子元素）
               | listValue indexes?                        #listRoute     // 列表路由
               | STRING indexes?                           #stringRoute   // 字符串路由
               ;
@@ -63,11 +63,13 @@ routerMapping : IDENTIFIER indexes?                       #identifierExpr
 /* 路由的规则 */
 routeNameSet    : routeName (DOT routeName)* ;
 /* 路由名 */
-routeName       : IDENTIFIER indexes? ;
+routeName       : IDENTIFIER indexes? (implicitParameter)*;
 /* 索引 */
 indexes    : ( LSBT expr RSBT )+; // [1][]
-
-
+/* 隐式参数 */
+implicitParameter  : LBT exprList? RBT; // 隐式参数在函数调用时传递给函数真正的值。
+/* 显式参数 */
+explicitParameter  :LBT idList? RBT; // 显式参数在函数定义时列出。
 /* 判断 */
 ifStatement: ifStat elseIfStat* elseStat?;
 ifStat    : IF LBT expr RBT OCBR blockSet CCBR;
@@ -81,19 +83,13 @@ whileStatement: WHILE LBT expr RBT OCBR blockSet CCBR;
 doWhileStatement: DO OCBR blockSet CCBR WHILE LBT expr RBT;
 
 /* lambda函数声明 */
-lambdaDef       : LBT idList? RBT LAMBDA OCBR blockSet CCBR;
+lambdaDef       : explicitParameter LAMBDA OCBR blockSet CCBR;
 /* 函数 */
-functionDecl: DEF IDENTIFIER LBT idList? RBT OCBR blockSet CCBR; // 函数 xx() {}
+functionDecl: DEF IDENTIFIER explicitParameter OCBR blockSet CCBR; // 函数 xx() {}
 /* 函数调用 */
-functionCall: IDENTIFIER LBT exprList? RBT functionCallResult?                     #identifierFunctionCall // xx()
-            | systemFunction                                                       #systemFunctionCall
+functionCall: IDENTIFIER implicitParameter (implicitParameter)*                    #identifierFunctionCall // xx()
             ;
-functionCallResult : //functionCall indexes?                                         #functionCallRoute        // 方法返回值路由
-//                   | LBT exprList? RBT functionCallResult?                         #functionCallRoute_call
-                     indexes functionCallResult?                                   #funcCallResult_route1  // 对结果在进行路由，并处理结果
-//                   | indexes? DOT routeNameSet functionCallResult?                 #funcCallResult_route2  // 对结果在进行路由，并处理结果
-                   | LBT exprList? RBT functionCallResult?                         #funcCallResult_call    // 调用函数返回的函数，并处理结果
-                   ;
+
 /* 内置函数 */
 systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | PRINTLN LBT exprList? RBT   #printlnFunctionCall

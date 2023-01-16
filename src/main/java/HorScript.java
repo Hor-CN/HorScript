@@ -1,6 +1,5 @@
 import core.HorScriptLexer;
 import core.HorScriptParser;
-import domain.ObjectModel;
 import exception.ThrowingErrorListener;
 import exception.VisitorException;
 import org.antlr.v4.runtime.CharStream;
@@ -9,9 +8,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import parser.HorScriptVisitor;
 import parser.Scope;
+
 import java.io.File;
-import java.util.Collections;
-import java.util.Map;
 
 /** 运行
  * @author hor (hor@itbk.cn)
@@ -59,8 +57,7 @@ public class HorScript {
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.rootInstSet();
             Scope scope = new Scope(null,false);
-            Map<String, ObjectModel> objects = Collections.emptyMap();
-            HorScriptVisitor visitor = new HorScriptVisitor(scope, objects);
+            HorScriptVisitor visitor = new HorScriptVisitor(scope);
             visitor.visit(tree);
     }
 }
