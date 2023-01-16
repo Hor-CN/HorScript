@@ -2,13 +2,12 @@ package parser;
 
 
 import cn.hutool.core.collection.CollUtil;
+import domain.ListModel;
 import domain.ValueModel;
 import domain.VariableModel;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-
 import java.util.List;
-import java.util.Map;
 
 public class Function {
 
@@ -37,17 +36,21 @@ public class Function {
         return block;
     }
 
-    public ValueModel invoke(List<ValueModel> args, Map<String, Function> functions) {
-        if (args.size() != this.params.size()) {
-            throw new RuntimeException("非法函数调用");
-        }
-        // create function scope
+    public ValueModel invoke(List<ValueModel> args) {
         Scope scopeNext = new Scope(parentScope, true);
+        ListModel listModel = new ListModel();
+        for (ValueModel value : args) {
+            listModel.add(value);
+        }
+
         for (int i = 0; i < this.params.size(); i++) {
-            ValueModel value = args.get(i);
+            ValueModel value;
+            if (i < args.size()) value = args.get(i);
+            else value = ValueModel.NULL;
             scopeNext.assignParam(new VariableModel(this.params.get(i).getText()), value);
         }
-        HorScriptVisitor evalVisitorNext = new HorScriptVisitor(scopeNext,functions);
+        scopeNext.localAssign(new VariableModel("参数"),new ValueModel(listModel));
+        HorScriptVisitor evalVisitorNext = new HorScriptVisitor(scopeNext);
         ValueModel ret = ValueModel.VOID;
         try {
             evalVisitorNext.visit(this.block);
