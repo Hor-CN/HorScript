@@ -7,10 +7,8 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import parser.Function;
 import parser.HorScriptVisitor;
 import parser.Scope;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
@@ -61,9 +59,8 @@ public class HorScript {
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.rootInstSet();
             Scope scope = new Scope(null,false);
-            Map<String, Function> functions = Collections.emptyMap();
             Map<String, ObjectModel> objects = Collections.emptyMap();
-            HorScriptVisitor visitor = new HorScriptVisitor(scope,functions, objects);
+            HorScriptVisitor visitor = new HorScriptVisitor(scope, objects);
             visitor.visit(tree);
     }
 }
