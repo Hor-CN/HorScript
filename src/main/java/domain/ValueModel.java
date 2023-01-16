@@ -1,10 +1,16 @@
 package domain;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.lang.TypeReference;
+import core.HorScriptParser.AnyObjectContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import parser.Function;
 import utils.NumberUtils;
 import utils.OperatorUtils;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 
 public class ValueModel implements Comparable<ValueModel>,DataModel{
 
@@ -66,6 +72,15 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
         return (Function) this.value;
     }
 
+    public List<TerminalNode> asExplicitParameter() {
+        return Convert.convert(new TypeReference<List<TerminalNode>>() {
+        }, this.value);
+    }
+
+    public List<ValueModel> asImplicitParameter() {
+        return Convert.convert(new TypeReference<List<ValueModel>>() {
+        }, this.value);
+    }
 
     public ObjectModel asObjectModel() {
         return (ObjectModel) this.value;

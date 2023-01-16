@@ -1,7 +1,6 @@
 package parser;
 
 import domain.DataModel;
-import domain.ObjectModel;
 import domain.ValueModel;
 
 import java.util.LinkedHashMap;
@@ -41,6 +40,4 @@ public class Object {
     public Object parent() {
         return parent;
     }
-
-
 }
