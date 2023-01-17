@@ -110,7 +110,7 @@ parser.HorScript，它是一种脚本语言，旨在通过提供以**中文**来
 ```
 
 > 
-[更多例子](https://github.com/Hor-CN/parser.HorScript/tree/main/src/main/resources)
+[更多例子](https://github.com/Hor-CN/HorScript/tree/main/src/main/resources)
 
 ## 关键字
 > 与现有编程语言关键字对照表
@@ -130,7 +130,7 @@ parser.HorScript，它是一种脚本语言，旨在通过提供以**中文**来
 
 > 详情用法请看文档
 
-- [HorScript文档](https://github.com/Hor-CN/parser.HorScript/wiki)
+- [HorScript文档](https://github.com/Hor-CN/HorScript/wiki)
 
 
 ## 协作
