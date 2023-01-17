@@ -1,3 +1,5 @@
+package parser;
+
 import core.HorScriptLexer;
 import core.HorScriptParser;
 import exception.ThrowingErrorListener;
@@ -7,9 +9,11 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import parser.HorScriptVisitor;
+import parser.ReturnValue;
 import parser.Scope;
 
 import java.io.File;
+import java.io.IOException;
 
 /** 运行
  * @author hor (hor@itbk.cn)
@@ -19,7 +23,7 @@ import java.io.File;
 public class HorScript {
 
     /**
-     * 解析 HorScript 执行脚本
+     * 解析 parser.HorScript 执行脚本
      * @param code 脚本代码
      */
     public void parserCode(String code) {
@@ -28,7 +32,7 @@ public class HorScript {
     }
 
     /**
-     * 解析 HorScript 执行脚本文件
+     * 解析 parser.HorScript 执行脚本文件
      * @param fileName 脚本代码文件地址
      */
     public void parserCode(File fileName) {
@@ -42,6 +46,29 @@ public class HorScript {
                 e.printStackTrace();
             }
         }
+        catch (ReturnValue returnValue) {
+            System.out.print(returnValue.value);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void _parserCode(File fileName) throws ReturnValue {
+        try {
+            CharStream input = CharStreams.fromFileName(fileName.getAbsolutePath());
+            parser(input);
+        }catch (VisitorException e ) {
+            if (e.getMessage() != null) {
+                System.err.println(e.getMessage());
+            }
+        }
+        catch (ReturnValue returnValue) {
+           throw  returnValue;
+        }
+        catch (IOException exception) {
+            System.err.println(exception.getMessage());
+        }
         catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,7 +79,6 @@ public class HorScript {
             HorScriptLexer lexer = new HorScriptLexer(charStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             HorScriptParser parser = new HorScriptParser(tokens);
-            parser.setBuildParseTree(true);
             parser.removeErrorListeners();
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.rootInstSet();
