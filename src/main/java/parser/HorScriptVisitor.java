@@ -1,6 +1,8 @@
 package parser;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
 import core.HorScriptLexer;
 import core.HorScriptParser.*;
 import core.HorScriptParserBaseVisitor;
@@ -11,6 +13,8 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -25,6 +29,44 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
     public HorScriptVisitor(Scope scope) {
         this.scope = scope;
+    }
+
+
+    @Override
+    public ValueModel visitImportInst(ImportInstContext ctx) {
+        VariableModel var = new VariableModel(ctx.IDENTIFIER().getText());
+        if (ctx.ROU() != null) {
+//            System.out.println("内部");
+        }
+        try {
+            String _path = FileUtil.getParent(ctx.start.getTokenSource().getSourceName(),1);
+            String path = ctx.STRING().getText();
+            File file = FileUtil.file(_path, StrUtil.sub(path,1,-1));
+            if (!file.isFile()) {
+                throw newParseException(ctx.start, path + " 无法找到模块");
+            }
+            HorScript horScript = new HorScript();
+            horScript._parserCode(file);
+        }catch (ReturnValue returnValue) {
+            scope.globalAssign(var,returnValue.value);
+        }
+        return ValueModel.VOID;
+    }
+
+    @Override
+    public ValueModel visitExportInst(ExportInstContext ctx) {
+        List<TerminalNode> terminalNodes = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
+        ObjectModel objectModel = new ObjectModel();
+        for (TerminalNode terminalNode : terminalNodes) {
+            VariableModel var = new VariableModel(terminalNode.getText());
+            ValueModel content = scope.resolve(var);
+            if (content == null) {
+                content = ValueModel.NULL;
+            }
+            objectModel.put(var.getKey(),content);
+        }
+        returnValue.value = new ValueModel(objectModel);
+        throw returnValue;
     }
 
     // 语句块

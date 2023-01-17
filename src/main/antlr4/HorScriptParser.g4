@@ -3,10 +3,12 @@ parser grammar HorScriptParser;
 options { tokenVocab = HorScriptLexer; }
 
 /* 入口 */
-rootInstSet : importInst* blockSet EOF;
+rootInstSet : importInst* blockSet exportInst* EOF;
 
 /* import 指令 */
 importInst  : IMPORT ROU? STRING AS IDENTIFIER SEM?; // 导入 @'xxx.cn.itbk.horscript.core' as xx;
+/* 导出 */
+exportInst  : EXPORT OCBR idList CCBR;
 
 /* 语句块 */
 blockSet    : ( statement )* ( RETURN anyObject (SEM)? )?;
@@ -23,6 +25,7 @@ statement
  | forStatement
  | whileStatement
  | doWhileStatement SEM?
+ | routerMapping SEM?
  ;
 
 /* 基本类型 */

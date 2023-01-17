@@ -4,6 +4,7 @@ lexer grammar HorScriptLexer;
 VAR     : '赋值';
 GLOBAL  : '全局';
 IMPORT  : '导入';
+EXPORT  : '导出';
 AS      : '为';
 ASSERT  : '断言';
 DEF     : '函数';

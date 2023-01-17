@@ -23,6 +23,12 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitImportInst(HorScriptParser.ImportInstContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#exportInst}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExportInst(HorScriptParser.ExportInstContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#blockSet}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
