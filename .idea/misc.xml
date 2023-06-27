@@ -26,7 +26,7 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/src/main/antlr4/HorScriptParser.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="D:\Application\JetBrains\IdeaProject\HorScrtip\src\main\antlr4\hs" />
+          <option name="outputDir" value="$PROJECT_DIR$/hs/" />
           <option name="libDir" value="" />
           <option name="encoding" value="utf-8" />
           <option name="pkg" value="core" />

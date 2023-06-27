@@ -1028,26 +1028,34 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     }
 
     private ValueModel resolveIndexes(ValueModel val, List<ExprContext> indexes) {
-        for (ExprContext ec : indexes) {
-            ValueModel idx = this.visit(ec);
-            int i = idx.asInt();
-            if (!idx.isNumber() || (!val.isList() && !val.isString())) {
-                throw newParseException(ec.start, "非法表达式: " + ec.getText());
-            }
-            if (val.isObjectModel()) {
-                val = new ValueModel(val.asObjectModel().get(idx.asString()));
-                return val;
-            }
-            if (val.isString()) {
-                if (val.asString().length() - 1 < i) {
-                    throw newParseException(ec.start, "字符串索引超出范围：" + i + " 解决方案：索引 <= " + (i - 1));
+        // 判断为 索引 or 切片
+        if (indexes.size() == 1) { // 索引
+            for (ExprContext ec : indexes) {
+                ValueModel idx = this.visit(ec);
+                int i = idx.asInt();
+                if (!idx.isNumber() || (!val.isList() && !val.isString())) {
+                    throw newParseException(ec.start, "非法表达式: " + ec.getText());
                 }
-                val = new ValueModel(val.asString().substring(i, i + 1));
-            } else {
-                val = val.asList().getValue(i);
+                if (val.isObjectModel()) {
+                    val = new ValueModel(val.asObjectModel().get(idx.asString()));
+                    return val;
+                }
+                if (val.isString()) {
+                    if (val.asString().length() - 1 < i) {
+                        throw newParseException(ec.start, "字符串索引超出范围：" + i + " 解决方案：索引 <= " + (i - 1));
+                    }
+                    val = new ValueModel(val.asString().substring(i, i + 1));
+                } else {
+                    val = val.asList().getValue(i);
+                }
             }
+            return val;
+        }else if (indexes.size() == 2) { // 起始+结束
+
         }
-        return val;
+        System.out.println("个数"+indexes.size());
+
+        return new ValueModel();
     }
 
     private void setAtIndex(ParserRuleContext ctx, List<ExprContext> indexes, ValueModel val, ValueModel newVal) {

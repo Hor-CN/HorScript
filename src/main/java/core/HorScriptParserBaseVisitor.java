@@ -1,4 +1,4 @@
-// Generated from java-escape by ANTLR 4.11.1
+// Generated from /Users/hor/Code/IdeaProjects/HorScript/src/main/antlr4/HorScriptParser.g4 by ANTLR 4.12.0
 package core;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 

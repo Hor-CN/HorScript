@@ -67,8 +67,10 @@ routerMapping : routeName                                 #identifierExpr
 routeNameSet    : routeName (DOT routeName)* ;
 /* 路由名 */
 routeName       : IDENTIFIER indexes? (implicitParameter)*;
-/* 索引 */
-indexes    : ( LSBT expr RSBT )+; // [1][]
+/* 索引与切片 [起始:结束:步长]*/
+indexes         : ( LSBT expr? (COLON expr? (COLON expr?)?)? RSBT)+; // [1][]
+
+
 /* 隐式参数 */
 implicitParameter  : LBT exprList? RBT; // 隐式参数在函数调用时传递给函数真正的值。
 /* 显式参数 */

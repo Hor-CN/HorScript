@@ -3942,7 +3942,7 @@ public class ArrayUtils {
      *                                   (index < 0 || index > array.length).
      */
     public static byte[] add(final byte[] array, final int index, final byte element) {
-        return (byte[]) ArrayUtils.add(array, index, new Byte(element), Byte.TYPE);
+        return (byte[]) ArrayUtils.add(array, index, element, Byte.TYPE);
     }
 
     /**
