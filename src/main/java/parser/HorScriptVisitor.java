@@ -1,10 +1,8 @@
 package parser;
 
-import cn.hutool.core.io.FileUtil;
-
 import domain.*;
 import java.io.File;
-import utils.OperatorUtils;
+import utils.OperatorUtil;
 import utils.StringUtil;
 import utils.ListUtil;
 import java.util.List;
@@ -43,19 +41,31 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitImportInst(ImportInstContext ctx) {
         VariableModel var = new VariableModel(ctx.IDENTIFIER().getText());
 
+        String importPath = StringUtil.sub(ctx.STRING().getText(),1,-1);
+        File importFile = new File(importPath);
+        if (importFile.isAbsolute()) {
+            if (!importFile.isFile()) {
+                throw parseException(ctx.start, importPath + " 无法找到模块");
+            }
+        }else {
+            File parent = new File(ctx.start.getTokenSource().getSourceName()).getParentFile();
+            importFile = new File(parent,importPath);
+        }
+
         // @      if (ctx.ROU() != null) { // 导入 @'网络模块' 为 网络;
         //            System.out.println("内部包模块");
         //        }
 
         try {
-            String _path = FileUtil.getParent(ctx.start.getTokenSource().getSourceName(),1);
-            String path = ctx.STRING().getText();
-            File file = FileUtil.file(_path, StringUtil.sub(path,1,-1));
-            if (!file.isFile()) {
-                throw parseException(ctx.start, path + " 无法找到模块");
-            }
+//            String _path = FileUtil.getParent(ctx.start.getTokenSource().getSourceName(),1);
+//            new File(ctx.start.getTokenSource().getSourceName()).getParentFile().getAbsolutePath();
+//
+//            File file = FileUtil.file(_path, StringUtil.sub(importPath,1,-1));
+//            if (!file.isFile()) {
+//                throw parseException(ctx.start, importPath + " 无法找到模块");
+//            }
             HorScript horScript = new HorScript();
-            horScript._parserCode(file);
+            horScript._parserCode(importFile);
         }catch (ReturnModel returnModel) {
             scope.globalAssign(var, returnModel.value);
         }
@@ -784,7 +794,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 if (!vm.isNumber()) {
                     throw parseException(ctx.start, "类型错误: " + ctx.getText());
                 }
-                return vm.setValue(OperatorUtils.multiply(-1, vm.asNumber()));
+                return vm.setValue(OperatorUtil.multiply(-1, vm.asNumber()));
             case HorScriptLexer.NOT:
                 if (vm.isNumber()) {
                     vm.setValue(vm.asInt() > 0);
@@ -948,7 +958,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
         // number + number
         if (lhs.isNumber() && rhs.isNumber()) {
-            return res.setValue(OperatorUtils.add(lhs.asNumber(),rhs.asNumber()));
+            return res.setValue(OperatorUtil.add(lhs.asNumber(),rhs.asNumber()));
         }
 
         // list + any
@@ -973,7 +983,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
         // number - number
         if (lhs.isNumber() && rhs.isNumber()) {
-            return res.setValue(OperatorUtils.subtract(lhs.asNumber(),rhs.asNumber()));
+            return res.setValue(OperatorUtil.subtract(lhs.asNumber(),rhs.asNumber()));
         }
 
         // list - any
@@ -997,7 +1007,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
         // number * number
         if (lhs.isNumber() && rhs.isNumber()) {
-            return vm.setValue(OperatorUtils.multiply(lhs.asNumber(),rhs.asNumber()));
+            return vm.setValue(OperatorUtil.multiply(lhs.asNumber(),rhs.asNumber()));
         }
 
         // string * number
@@ -1033,7 +1043,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.divide(lhs.asNumber(),rhs.asNumber(),10,null));
+            return new ValueModel(OperatorUtil.divide(lhs.asNumber(),rhs.asNumber(),10,null));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1050,7 +1060,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
         if (lhs.isNumber() && rhs.isNumber()) {
 
-            return new ValueModel(OperatorUtils.mod(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.mod(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1066,7 +1076,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.and(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.and(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1082,7 +1092,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.or(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.or(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1099,7 +1109,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.xor(lhs.asNumber(),lhs.asNumber()));
+            return new ValueModel(OperatorUtil.xor(lhs.asNumber(),lhs.asNumber()));
         }
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
     }
@@ -1114,7 +1124,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.shiftLeft(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.shiftLeft(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1130,7 +1140,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.shiftRight(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.shiftRight(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1146,7 +1156,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.shiftRightWithUnsigned(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.shiftRightWithUnsigned(lhs.asNumber(),rhs.asNumber()));
         }
 
         throw parseException(ctx.start, "非法表达式: " + ctx.getText());
@@ -1162,7 +1172,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.gteq(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.gteq(lhs.asNumber(),rhs.asNumber()));
         }
         if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) >= 0);
@@ -1181,7 +1191,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.lteq(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.lteq(lhs.asNumber(),rhs.asNumber()));
         }
         if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) <= 0);
@@ -1200,7 +1210,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.gt(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.gt(lhs.asNumber(),rhs.asNumber()));
         }
         if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) > 0);
@@ -1219,7 +1229,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         ValueModel rhs = this.visit(ctx.expr(1));
 
         if (lhs.isNumber() && rhs.isNumber()) {
-            return new ValueModel(OperatorUtils.lt(lhs.asNumber(),rhs.asNumber()));
+            return new ValueModel(OperatorUtil.lt(lhs.asNumber(),rhs.asNumber()));
         }
         if (lhs.isString() && rhs.isString()) {
             return new ValueModel(lhs.asString().compareTo(rhs.asString()) < 0);

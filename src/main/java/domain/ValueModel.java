@@ -6,7 +6,7 @@ import core.HorScriptParser.AnyObjectContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import parser.Function;
 import utils.NumberUtil;
-import utils.OperatorUtils;
+import utils.OperatorUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -107,27 +107,27 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 是否可以转为 Number 类型值 */
     public boolean isNumber() {
-        return OperatorUtils.isNumber(this.value);
+        return OperatorUtil.isNumber(this.value);
     }
 
     /** 是否可以转为 byte 类型值 */
     public boolean isByte() {
-        return OperatorUtils.isByteNumber(this.value);
+        return OperatorUtil.isByteNumber(this.value);
     }
 
     /** 是否可以转为 short 类型值 */
     public boolean isShort() {
-        return OperatorUtils.isShortNumber(this.value) || isByte();
+        return OperatorUtil.isShortNumber(this.value) || isByte();
     }
 
     /** 是否可以转为 int 类型值 */
     public boolean isInt() {
-        return OperatorUtils.isIntegerNumber(this.value) || isShort();
+        return OperatorUtil.isIntegerNumber(this.value) || isShort();
     }
 
     /** 是否可以转为 long 类型值 */
     public boolean isLong() {
-        return OperatorUtils.isLongNumber(this.value) || isInt();
+        return OperatorUtil.isLongNumber(this.value) || isInt();
     }
 
     /** 是否可以转为 BigInteger 类型值 */
@@ -137,12 +137,12 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 是否可以转为 float 类型值 */
     public boolean isFloat() {
-        return OperatorUtils.isFloatNumber(this.value);
+        return OperatorUtil.isFloatNumber(this.value);
     }
 
     /** 是否可以转为 double 类型值 */
     public boolean isDouble() {
-        return OperatorUtils.isDoubleNumber(this.value) || isFloat();
+        return OperatorUtil.isDoubleNumber(this.value) || isFloat();
     }
 
     /** 是否可以转为 BigDecimal 类型值 */
@@ -162,7 +162,7 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 是否可以转为 boolean 类型值 */
     public boolean isBoolean() {
-        return OperatorUtils.isBoolean(this.value);
+        return OperatorUtil.isBoolean(this.value);
     }
 
 

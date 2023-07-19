@@ -1,7 +1,7 @@
 package domain;
 
 import utils.ArrayUtil;
-import utils.OperatorUtils;
+import utils.OperatorUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class DomainHelper {
         } else if (object == null) {
             // 基础类型：空
             return ValueModel.NULL;
-        } else if (OperatorUtils.isBoolean(object)) {
+        } else if (OperatorUtil.isBoolean(object)) {
             // 基础类型：boolean
             if ((boolean) object) {
                 return ValueModel.TRUE;
@@ -43,7 +43,7 @@ public class DomainHelper {
         } else if (object instanceof CharSequence) {
             // 基础类型：字符串
             return new ValueModel(String.valueOf(object));
-        } else if (OperatorUtils.isNumber(object)) {
+        } else if (OperatorUtil.isNumber(object)) {
             // 基础类型：数字
             return new ValueModel(object);
         } else if (object.getClass().isEnum()) {

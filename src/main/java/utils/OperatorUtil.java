@@ -12,7 +12,7 @@ import java.math.BigInteger;
  * @author hor (hor@itbk.cn)
  * @version : 2022-10-11
  */
-public class OperatorUtils {
+public class OperatorUtil {
 
     public static boolean isNumber(Object object) {
         return object instanceof Number;
@@ -101,31 +101,31 @@ public class OperatorUtils {
     }
 
     public static int getNumericType(Object value) {
-        if (OperatorUtils.isBoolean(value)) {
+        if (OperatorUtil.isBoolean(value)) {
             return BOOL;
         }
-        if (OperatorUtils.isByteNumber(value)) {
+        if (OperatorUtil.isByteNumber(value)) {
             return BYTE;
         }
-        if (OperatorUtils.isShortNumber(value)) {
+        if (OperatorUtil.isShortNumber(value)) {
             return SHORT;
         }
-        if (OperatorUtils.isCharacter(value)) {
+        if (OperatorUtil.isCharacter(value)) {
             return CHAR;
         }
-        if (OperatorUtils.isIntegerNumber(value)) {
+        if (OperatorUtil.isIntegerNumber(value)) {
             return INT;
         }
-        if (OperatorUtils.isLongNumber(value)) {
+        if (OperatorUtil.isLongNumber(value)) {
             return LONG;
         }
         if (value instanceof BigInteger) {
             return BIGINT;
         }
-        if (OperatorUtils.isFloatNumber(value)) {
+        if (OperatorUtil.isFloatNumber(value)) {
             return FLOAT;
         }
-        if (OperatorUtils.isDoubleNumber(value)) {
+        if (OperatorUtil.isDoubleNumber(value)) {
             return DOUBLE;
         }
         if (value instanceof BigDecimal) {
@@ -363,10 +363,10 @@ public class OperatorUtils {
         if (tester instanceof BigDecimal) {
             return true;
         }
-        if (OperatorUtils.isFloatNumber(tester)) {
+        if (OperatorUtil.isFloatNumber(tester)) {
             return true;
         }
-        return OperatorUtils.isDoubleNumber(tester);
+        return OperatorUtil.isDoubleNumber(tester);
     }
 
     private static Number newReal(int realType, long value) {

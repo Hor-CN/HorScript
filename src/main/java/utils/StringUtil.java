@@ -2,8 +2,9 @@ package utils;
 
 
 import cn.hutool.core.text.StrFormatter;
+import utils.pool.StrPool;
 
-public class StringUtil {
+public class StringUtil implements StrPool {
 
     /**
      * 字符串常量：{@code "null"} <br>

@@ -1,6 +1,6 @@
 package utils;
 
-import cn.hutool.core.text.CharPool;
+import utils.pool.CharPool;
 
 public class CharUtil  implements CharPool {
 
