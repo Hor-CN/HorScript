@@ -4,8 +4,6 @@ package utils.pool;
 
 /**
  * 常用字符串常量定义
- * @see cn.hutool.core.text.CharPool
- *
  * @author looly
  * @since 5.6.3
  */
@@ -14,72 +12,72 @@ public interface StrPool {
     /**
      * 字符常量：空格符 {@code ' '}
      */
-    char C_SPACE = cn.hutool.core.text.CharPool.SPACE;
+    char C_SPACE = CharPool.SPACE;
 
     /**
      * 字符常量：制表符 {@code '\t'}
      */
-    char C_TAB = cn.hutool.core.text.CharPool.TAB;
+    char C_TAB = CharPool.TAB;
 
     /**
      * 字符常量：点 {@code '.'}
      */
-    char C_DOT = cn.hutool.core.text.CharPool.DOT;
+    char C_DOT = CharPool.DOT;
 
     /**
      * 字符常量：斜杠 {@code '/'}
      */
-    char C_SLASH = cn.hutool.core.text.CharPool.SLASH;
+    char C_SLASH = CharPool.SLASH;
 
     /**
      * 字符常量：反斜杠 {@code '\\'}
      */
-    char C_BACKSLASH = cn.hutool.core.text.CharPool.BACKSLASH;
+    char C_BACKSLASH = CharPool.BACKSLASH;
 
     /**
      * 字符常量：回车符 {@code '\r'}
      */
-    char C_CR = cn.hutool.core.text.CharPool.CR;
+    char C_CR = CharPool.CR;
 
     /**
      * 字符常量：换行符 {@code '\n'}
      */
-    char C_LF = cn.hutool.core.text.CharPool.LF;
+    char C_LF = CharPool.LF;
 
     /**
      * 字符常量：下划线 {@code '_'}
      */
-    char C_UNDERLINE = cn.hutool.core.text.CharPool.UNDERLINE;
+    char C_UNDERLINE = CharPool.UNDERLINE;
 
     /**
      * 字符常量：逗号 {@code ','}
      */
-    char C_COMMA = cn.hutool.core.text.CharPool.COMMA;
+    char C_COMMA = CharPool.COMMA;
 
     /**
      * 字符常量：花括号（左） <code>'{'</code>
      */
-    char C_DELIM_START = cn.hutool.core.text.CharPool.DELIM_START;
+    char C_DELIM_START = CharPool.DELIM_START;
 
     /**
      * 字符常量：花括号（右） <code>'}'</code>
      */
-    char C_DELIM_END = cn.hutool.core.text.CharPool.DELIM_END;
+    char C_DELIM_END = CharPool.DELIM_END;
 
     /**
      * 字符常量：中括号（左） {@code '['}
      */
-    char C_BRACKET_START = cn.hutool.core.text.CharPool.BRACKET_START;
+    char C_BRACKET_START = CharPool.BRACKET_START;
 
     /**
      * 字符常量：中括号（右） {@code ']'}
      */
-    char C_BRACKET_END = cn.hutool.core.text.CharPool.BRACKET_END;
+    char C_BRACKET_END = CharPool.BRACKET_END;
 
     /**
      * 字符常量：冒号 {@code ':'}
      */
-    char C_COLON = cn.hutool.core.text.CharPool.COLON;
+    char C_COLON = CharPool.COLON;
 
     /**
      * 字符常量：艾特 {@code '@'}

@@ -1,7 +1,5 @@
 package domain;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.lang.TypeReference;
 import core.HorScriptParser.AnyObjectContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import parser.Function;
@@ -82,13 +80,11 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
     }
 
     public List<TerminalNode> asExplicitParameter() {
-        return Convert.convert(new TypeReference<List<TerminalNode>>() {
-        }, this.value);
+        return (List<TerminalNode>) this.value;
     }
 
     public List<AnyObjectContext> asImplicitParameter() {
-        return Convert.convert(new TypeReference<List<AnyObjectContext>>() {
-        }, this.value);
+        return (List<AnyObjectContext>) this.value;
     }
 
 

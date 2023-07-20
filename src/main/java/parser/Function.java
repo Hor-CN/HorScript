@@ -1,13 +1,14 @@
 package parser;
 
 
-import cn.hutool.core.collection.CollUtil;
-import domain.ListModel;
+
 import domain.ReturnModel;
 import domain.ValueModel;
 import domain.VariableModel;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class Function {
@@ -62,12 +63,19 @@ public class Function {
 
     @Override
     public String toString() {
+        List<String> params = new ArrayList<>();
+        for (TerminalNode param : this.params) {
+            params.add(param.getText());
+        }
+
+
         if (this.Identifier != null) {
-            return "函数" + Identifier + " (" + CollUtil.join(this.params, ",") + ") {\n" +
+
+            return "函数" + Identifier + " (" + String.join(",",params) + ") {\n" +
                     block.getText() + "\n}";
         }
         return "(" +
-                CollUtil.join(this.params, ",") + //str -> a,b,c +
+                String.join(",",params) + //str -> a,b,c +
                 ") => { " + block.getText() +
                 " }";
     }
