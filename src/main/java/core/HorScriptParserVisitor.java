@@ -289,11 +289,19 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInputFunctionCall(HorScriptParser.InputFunctionCallContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link HorScriptParser#selfExpr}.
+	 * Visit a parse tree produced by the {@code postSelfExpr}
+	 * labeled alternative in {@link HorScriptParser#selfExpr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSelfExpr(HorScriptParser.SelfExprContext ctx);
+	T visitPostSelfExpr(HorScriptParser.PostSelfExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code preSelfExpr}
+	 * labeled alternative in {@link HorScriptParser#selfExpr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPreSelfExpr(HorScriptParser.PreSelfExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code dyadicExpr_F}
 	 * labeled alternative in {@link HorScriptParser#expr}.

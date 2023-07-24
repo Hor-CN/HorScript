@@ -102,7 +102,9 @@ systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | INPUT LBT STRING? RBT      #inputFunctionCall
               ;
 
-selfExpr: IDENTIFIER postfix=( INCREMENT | DECREMENT); // 自增自减
+selfExpr: IDENTIFIER postfix=( INCREMENT | DECREMENT)  #postSelfExpr //后自增自减
+        | prefix=(  INCREMENT | DECREMENT ) IDENTIFIER      #preSelfExpr // 前自增自减
+        ;
 
 /* 表达式 */
 expr:  (primitiveValue | functionCall | routerMapping | systemFunction | selfExpr)      #atomExpr

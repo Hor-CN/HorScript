@@ -763,12 +763,38 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     }
 
 
+
     /**
-     * 自增自减
+     * 前自增自减
      * @param ctx the parse tree
      */
     @Override
-    public ValueModel visitSelfExpr(SelfExprContext ctx) {
+    public ValueModel visitPreSelfExpr(PreSelfExprContext ctx) {
+        // 获取变量
+        VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
+        ValueModel valueModel = scope.resolve(variableModel);
+
+        if (!valueModel.isNumber()) {
+            throw parseException(ctx.start, "类型错误: " + ctx.getText());
+        }
+        switch (ctx.prefix.getType()) {
+            case HorScriptLexer.INCREMENT: {
+                return valueModel.setValue(OperatorUtil.add(valueModel.asNumber(), 1));
+            }
+            case HorScriptLexer.DECREMENT: {
+                return valueModel.setValue(OperatorUtil.subtract(valueModel.asNumber(),1));
+            }
+
+        }
+        return ValueModel.VOID;
+    }
+
+    /**
+     * 后自增自减
+     * @param ctx the parse tree
+     */
+    @Override
+    public ValueModel visitPostSelfExpr(PostSelfExprContext ctx) {
         // 获取变量
         VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
         ValueModel valueModel = scope.resolve(variableModel);
@@ -777,12 +803,19 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             throw parseException(ctx.start, "类型错误: " + ctx.getText());
         }
         switch (ctx.postfix.getType()) {
-            case HorScriptLexer.INCREMENT:
-                return valueModel.setValue(OperatorUtil.add(valueModel.asNumber(),1));
-            case HorScriptLexer.DECREMENT:
-                return valueModel.setValue(OperatorUtil.subtract(valueModel.asNumber(),1));
+            case HorScriptLexer.INCREMENT: {
+                Number oldValue = valueModel.asNumber();
+                valueModel.setValue(OperatorUtil.add(valueModel.asNumber(), 1));
+                return new ValueModel(oldValue);
+            }
+            case HorScriptLexer.DECREMENT: {
+                Number oldValue = valueModel.asNumber();
+                valueModel.setValue(OperatorUtil.subtract(valueModel.asNumber(),1));
+                return new ValueModel(oldValue);
+            }
+
         }
-        return super.visitSelfExpr(ctx);
+        return ValueModel.VOID;
     }
 
     /**
