@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 
 /** 运行
  * @author hor (hor@itbk.cn)
@@ -46,6 +47,9 @@ public class HorScript {
         }
         catch (ReturnModel returnModel) {
             System.out.print(returnModel.value);
+        }
+        catch (NoSuchFileException noSuchFileException) {
+            System.err.print("未找到脚本: " + fileName.getAbsolutePath());
         }
         catch (Exception e) {
             e.printStackTrace();

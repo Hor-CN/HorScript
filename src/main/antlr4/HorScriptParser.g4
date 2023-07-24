@@ -24,6 +24,7 @@ statement
  | whileStatement
  | doWhileStatement SEM?
  | routerMapping SEM?
+ | selfExpr SEM?
  ;
 
 /* 基本类型 */
@@ -101,16 +102,18 @@ systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | INPUT LBT STRING? RBT      #inputFunctionCall
               ;
 
+selfExpr: IDENTIFIER postfix=( INCREMENT | DECREMENT); // 自增自减
+
 /* 表达式 */
-expr:  (primitiveValue | functionCall | routerMapping | systemFunction)     #atomExpr
-    | LBT expr RBT                                                          #privilegeExpr // 优先
-    | prefix=( PLUS | MINUS | NOT) expr                                     #unaryExpr     // 一元运算 + - !
-    | expr op=( MUL | DIV | MOD ) expr                                      #dyadicExpr_A  // 二元运算 优先级1st  * /  %
-    | expr op=( PLUS | MINUS) expr                                          #dyadicExpr_B  // 二元运算优先级 2st + -
-    | expr op=( AND | OR | XOR | LSHIFT | RSHIFT | RSHIFT2) expr            #dyadicExpr_C  // 二元运算优先级 3st
-    | expr op=( GTEquals | LTEquals | GT | LT ) expr                        #dyadicExpr_D  // 4st '>=' | '<=' | '>' | '<'
-    | expr op=( EQ | NE ) expr                                              #dyadicExpr_E  // 5st '=='  '!='
-    | expr op=( SC_OR | SC_AND) expr                                        #dyadicExpr_F  // 6st || &&
-    | expr QMark expr COLON expr                                            #ternaryExpr   // 三元运算
-    | expr IN expr                                                          #inExpr        // 是否在xx true false
+expr:  (primitiveValue | functionCall | routerMapping | systemFunction | selfExpr)      #atomExpr
+    | LBT expr RBT                                                                      #privilegeExpr // 优先
+    | prefix=( PLUS | MINUS | NOT) expr                                                 #unaryExpr     // 一元运算 + - !
+    | expr op=( MUL | DIV | MOD ) expr                                                  #dyadicExpr_A  // 二元运算 优先级1st  * /  %
+    | expr op=( PLUS | MINUS) expr                                                      #dyadicExpr_B  // 二元运算优先级 2st + -
+    | expr op=( AND | OR | XOR | LSHIFT | RSHIFT | RSHIFT2) expr                        #dyadicExpr_C  // 二元运算优先级 3st
+    | expr op=( GTEquals | LTEquals | GT | LT ) expr                                    #dyadicExpr_D  // 4st '>=' | '<=' | '>' | '<'
+    | expr op=( EQ | NE ) expr                                                          #dyadicExpr_E  // 5st '=='  '!='
+    | expr op=( SC_OR | SC_AND) expr                                                    #dyadicExpr_F  // 6st || &&
+    | expr QMark expr COLON expr                                                        #ternaryExpr   // 三元运算
+    | expr IN expr                                                                      #inExpr        // 是否在xx true false
     ;

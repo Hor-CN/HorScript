@@ -24,6 +24,9 @@ TRUE    : '真';
 FALSE   : '假';
 
 
+INCREMENT     : '++';
+DECREMENT     : '--';
+
 /* arithmetic operators 算数运算 */
 PLUS    : '+';      // 加法
 MINUS   : '-';      // 减法

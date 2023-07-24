@@ -326,6 +326,13 @@ public class HorScriptParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> i
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitSelfExpr(HorScriptParser.SelfExprContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitDyadicExpr_F(HorScriptParser.DyadicExpr_FContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

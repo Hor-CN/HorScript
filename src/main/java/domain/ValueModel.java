@@ -488,8 +488,7 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
         }
         ValueModel that = (ValueModel)o;
         if(this.isNumber() && that.isNumber()) {
-            double diff = Math.abs(this.asDouble() - that.asDouble());
-            return diff < 0.00000000001;
+            return OperatorUtil.eq(this.asNumber(),that.asNumber());
         }
         else {
             return this.value.equals(that.value);

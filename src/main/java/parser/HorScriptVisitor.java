@@ -57,13 +57,6 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         //        }
 
         try {
-//            String _path = FileUtil.getParent(ctx.start.getTokenSource().getSourceName(),1);
-//            new File(ctx.start.getTokenSource().getSourceName()).getParentFile().getAbsolutePath();
-//
-//            File file = FileUtil.file(_path, StringUtil.sub(importPath,1,-1));
-//            if (!file.isFile()) {
-//                throw parseException(ctx.start, importPath + " 无法找到模块");
-//            }
             HorScript horScript = new HorScript();
             horScript._parserCode(importFile);
         }catch (ReturnModel returnModel) {
@@ -771,6 +764,28 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
 
 
     /**
+     * 自增自减
+     * @param ctx the parse tree
+     */
+    @Override
+    public ValueModel visitSelfExpr(SelfExprContext ctx) {
+        // 获取变量
+        VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
+        ValueModel valueModel = scope.resolve(variableModel);
+
+        if (!valueModel.isNumber()) {
+            throw parseException(ctx.start, "类型错误: " + ctx.getText());
+        }
+        switch (ctx.postfix.getType()) {
+            case HorScriptLexer.INCREMENT:
+                return valueModel.setValue(OperatorUtil.add(valueModel.asNumber(),1));
+            case HorScriptLexer.DECREMENT:
+                return valueModel.setValue(OperatorUtil.subtract(valueModel.asNumber(),1));
+        }
+        return super.visitSelfExpr(ctx);
+    }
+
+    /**
      * LBT expr RBT        #privilegeExpr  // 优先级
      * @param ctx the parse tree
      */
@@ -794,7 +809,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 if (!vm.isNumber()) {
                     throw parseException(ctx.start, "类型错误: " + ctx.getText());
                 }
-                return vm.setValue(OperatorUtil.multiply(-1, vm.asNumber()));
+                return vm.setValue(OperatorUtil.negate(vm.asNumber()));
             case HorScriptLexer.NOT:
                 if (vm.isNumber()) {
                     vm.setValue(vm.asInt() > 0);
