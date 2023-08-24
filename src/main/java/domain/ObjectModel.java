@@ -1,9 +1,6 @@
 package domain;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /** 对象模型
  * @author hor (hor@itbk.cn)
@@ -12,7 +9,7 @@ import java.util.Map;
  */
 public class ObjectModel implements DataModel {
 
-    private final Map<String, DataModel> dataModel = new LinkedHashMap<>();
+    private final HashMap<VariableModel, DataModel> dataModel = new LinkedHashMap<>();
 
     private final ObjectModel parent;
 
@@ -34,17 +31,17 @@ public class ObjectModel implements DataModel {
     }
 
 
-    public List<String> fieldNames() {
+    public List<VariableModel> fieldNames() {
         return new ArrayList<>(this.dataModel.keySet());
     }
 
 
-    public void put(String key, DataModel value) {
+    public void put(VariableModel key, DataModel value) {
         this.dataModel.put(key, value);
     }
     public <K, V> void putAll(Map<? extends K, ? extends V> m) {
         for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-            this.put(e.getKey().toString(), (DataModel) e.getValue());
+            this.put((VariableModel) e.getKey(), (DataModel) e.getValue());
         }
     }
 
@@ -56,13 +53,13 @@ public class ObjectModel implements DataModel {
         return this.dataModel.size();
     }
     @Override
-    public Map<String, DataModel> asOv() {
+    public Map<VariableModel, DataModel> asOv() {
         return this.dataModel;
     }
 
     @Override
-    public Map<String, Object> unwrap() {
-        Map<String, Object> unwrap = new LinkedHashMap<>(this.dataModel.size());
+    public Map<VariableModel, Object> unwrap() {
+        Map<VariableModel, Object> unwrap = new LinkedHashMap<>(this.dataModel.size());
         this.dataModel.forEach((key, dataModel) -> {
             unwrap.put(key, dataModel.unwrap());
         });
@@ -75,22 +72,22 @@ public class ObjectModel implements DataModel {
     }
 
     /** 获取某一个元素 */
-    public DataModel get(String fieldName) {
+    public DataModel get(VariableModel fieldName) {
         return this.dataModel.get(fieldName);
     }
 
     /** 判断是否为 ObjectModel 类型值 */
-    public boolean isObject(String fieldName) {
+    public boolean isObject(VariableModel fieldName) {
         return this.dataModel.get(fieldName) instanceof ObjectModel;
     }
 
     /** 判断是否为 ValueModel 类型值 */
-    public boolean isValue(String fieldName) {
+    public boolean isValue(VariableModel fieldName) {
         return this.dataModel.get(fieldName) instanceof ValueModel;
     }
 
     /** 将某一个元素转换为 ValueModel */
-    public ValueModel getValue(String fieldName) {
+    public ValueModel getValue(VariableModel fieldName) {
         DataModel dataItem = this.dataModel.get(fieldName);
         if (dataItem instanceof ValueModel) {
             return (ValueModel) dataItem;

@@ -18,7 +18,7 @@ public class Scope {
     /**
      * 变量
      */
-    private final Map<VariableModel, ValueModel> variables;
+    private final HashMap<VariableModel, ValueModel> variables;
     /**
      * 是否是局部作用域
      */

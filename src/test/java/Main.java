@@ -9,7 +9,7 @@ import java.io.File;
  */
 public class Main {
     public static void main(String[] args) {
-        File n = new File("src/test/java/例子/自增自减.hs");
+        File n = new File("src/test/java/例子/内置模块/系统模块.hs");
         HorScript horScript = new HorScript();
         horScript.parserCode(n);
     }

@@ -7,7 +7,11 @@ rootInstSet : importInst* blockSet exportInst* EOF;
 /* import 指令 */
 importInst  : IMPORT ROU? STRING AS IDENTIFIER SEM?; // 导入 @'xxx.cn.itbk.horscript.core' as xx;
 /* 导出 */
-exportInst  : EXPORT OCBR idList CCBR;
+exportInst  : EXPORT OCBR exportElements?  CCBR;
+
+exportElements: exportElement (COMMA exportElement)*;
+
+exportElement:  IDENTIFIER implicitParameter | IDENTIFIER;
 
 /* 语句块 */
 blockSet    : ( statement )* ( RETURN anyObject (SEM)? )?;
@@ -99,7 +103,6 @@ systemFunction: PRINT LBT exprList? RBT     #printFunctionCall
               | PRINTLN LBT exprList? RBT   #printlnFunctionCall
               | ASSERT LBT expr RBT        #assertFunctionCall
               | SIZE LBT anyObject RBT     #sizeFunctionCall
-              | INPUT LBT STRING? RBT      #inputFunctionCall
               ;
 
 selfExpr: IDENTIFIER postfix=( INCREMENT | DECREMENT)  #postSelfExpr //后自增自减

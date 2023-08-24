@@ -1,6 +1,7 @@
 package domain;
 
 import core.HorScriptParser.AnyObjectContext;
+import natives.NativeFunction;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import parser.Function;
 import utils.NumberUtil;
@@ -72,11 +73,22 @@ public class ValueModel implements Comparable<ValueModel>,DataModel{
 
     /** 判断是否为 Function **/
     public boolean isFunction() {
+
         return this.value instanceof Function;
     }
 
     public Function asFunction() {
         return (Function) this.value;
+    }
+
+    /** 判断是否为 内置模块Function **/
+    public boolean isNativesFunction() {
+        return this.value instanceof NativeFunction;
+    }
+
+    /** 判断是否为 内置模块Function **/
+    public NativeFunction asNativesFunction() {
+        return (NativeFunction) this.value;
     }
 
     public List<TerminalNode> asExplicitParameter() {

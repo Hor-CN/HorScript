@@ -60,7 +60,7 @@ public class DomainHelper {
                 if (entry instanceof Map.Entry) {
                     Object key = ((Map.Entry<?, ?>) entry).getKey();
                     Object val = ((Map.Entry<?, ?>) entry).getValue();
-                    objectModel.put(key.toString(), convertTo(val));
+                    objectModel.put((VariableModel) key, convertTo(val));
                 }
             }
             return objectModel;

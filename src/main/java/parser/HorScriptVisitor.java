@@ -2,6 +2,8 @@ package parser;
 
 import domain.*;
 import java.io.File;
+
+import natives.HorNatives;
 import utils.OperatorUtil;
 import utils.StringUtil;
 import utils.ListUtil;
@@ -39,23 +41,40 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
      */
     @Override
     public ValueModel visitImportInst(ImportInstContext ctx) {
+        // 别名
         VariableModel var = new VariableModel(ctx.IDENTIFIER().getText());
-
+        // 导入模块名
         String importPath = StringUtil.sub(ctx.STRING().getText(),1,-1);
+
+        // 使用 @ 符号将可导入内置模块
+        // @      if (ctx.ROU() != null) { // 导入 @'网络模块' 为 网络;
+        /*         导入 @'系统模块' 为 系统;
+         *          赋值 time = 系统.当前时间()
+         */
+        //            System.out.println("内部包模块");
+        //        }
+
+        if (ctx.ROU() != null) { // 导入 @'网络模块' 为 网络;
+            ValueModel importNative =  HorNatives.getInstance().importNative(importPath);
+            if (importNative != null){
+                scope.globalAssign(var, importNative);
+            } else {
+                throw parseException(ctx.start, importPath + " 无法找到模块");
+            }
+
+            return ValueModel.VOID;
+        }
+
+        // 其他导入HS脚本文件
         File importFile = new File(importPath);
         if (importFile.isAbsolute()) {
             if (!importFile.isFile()) {
                 throw parseException(ctx.start, importPath + " 无法找到模块");
             }
-        }else {
-            File parent = new File(ctx.start.getTokenSource().getSourceName()).getParentFile();
-            importFile = new File(parent,importPath);
         }
 
-        // @      if (ctx.ROU() != null) { // 导入 @'网络模块' 为 网络;
-        //            System.out.println("内部包模块");
-        //        }
-
+        File parent = new File(ctx.start.getTokenSource().getSourceName()).getParentFile();
+        importFile = new File(parent,importPath);
         try {
             HorScript horScript = new HorScript();
             horScript._parserCode(importFile);
@@ -71,15 +90,41 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
      */
     @Override
     public ValueModel visitExportInst(ExportInstContext ctx) {
-        List<TerminalNode> terminalNodes = ctx.idList() != null ? ctx.idList().IDENTIFIER() : new ArrayList<>();
         ObjectModel objectModel = new ObjectModel();
-        for (TerminalNode terminalNode : terminalNodes) {
-            VariableModel var = new VariableModel(terminalNode.getText());
-            ValueModel content = scope.resolve(var);
-            if (content == null) {
-                content = ValueModel.NULL;
+
+        if (ctx.exportElements().isEmpty()) {
+            throw RETURN_MODEL;
+        }
+        ExportElementsContext exportElementsContext = ctx.exportElements();
+        List<ExportElementContext> exportElementContexts = exportElementsContext.exportElement();
+        // 遍历导出
+        for (ExportElementContext exportElementContext : exportElementContexts) {
+            // 属性和对象
+            if (exportElementContext.implicitParameter() == null) {
+                VariableModel var = new VariableModel(exportElementContext.IDENTIFIER().getText());
+                ValueModel content = scope.resolve(var);
+                if (content == null) {
+                    content = ValueModel.NULL;
+                }
+                if (content.isObjectModel()) {
+                    // 设置为 对象 类型，默认 值 类型
+                    var.setType(ModelType.Object);
+                }
+                objectModel.put(var,content);
+
+            }else {
+                // 函数
+                List<AnyObjectContext> params = this.visit(exportElementContext.implicitParameter()).asImplicitParameter();
+                VariableModel var = new VariableModel(exportElementContext.IDENTIFIER().getText());
+                // 设置为 函数 类型
+                var.setType(ModelType.function);
+                var.setId(params.size());
+                ValueModel content = scope.resolve(var);
+                if (content == null) {
+                    content = ValueModel.NULL;
+                }
+                objectModel.put(var,content);
             }
-            objectModel.put(var.getKey(),content);
         }
         RETURN_MODEL.value = new ValueModel(objectModel);
         throw RETURN_MODEL;
@@ -101,8 +146,8 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             if (sx.functionDecl() != null) {
                 Stack.add(sx);
             }
-            // 提升变量声明
-            else if (sx.assignment() != null) {
+            // 提升前缀变量声明
+            else if (sx.noAssignment() != null) {
                 Stack1.add(sx);
             }
             // 其他不提升
@@ -154,6 +199,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         // 如果是 lambda 函数 加入 functions
         if (visit.isFunction()) {
             variableModel.setType(ModelType.function);
+            variableModel.setId(visit.asFunction().getParams().size());
         }
         // 如果是 object 加入 objects
         if (visit.isObjectModel()) {
@@ -180,6 +226,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         // 如果是 lambda 函数 加入 functions
         if (visit.isFunction()) {
             variableModel.setType(ModelType.function);
+            variableModel.setId(visit.asFunction().getParams().size());
         }
         // 如果是 object 加入 objects
         if (visit.isObjectModel()) {
@@ -278,6 +325,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         String id = ctx.IDENTIFIER().getText();
         // 创建变量
         VariableModel variableModel = new VariableModel(id);
+        variableModel.setId(params.size());
         // 创建函数
         Function function = new Function(scope, params, block);
         // 设置函数名
@@ -296,14 +344,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
     public ValueModel visitIdentifierFunctionCall(IdentifierFunctionCallContext ctx) {
         // 获取函数名
         VariableModel variableModel = new VariableModel(ctx.IDENTIFIER().getText());
+        variableModel.setType(ModelType.function);
         ValueModel valueModel = scope.resolve(variableModel);
-        // 是否为函数
-        if (!valueModel.isFunction()) {
-            throw parseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
-        }
+
 
         // 函数是否有参数并调用
-        if (ctx.implicitParameter() != null) {
+//        if (ctx.implicitParameter() != null) {
             // 遍历参数
             for (ImplicitParameterContext implicitParameterContext : ctx.implicitParameter()) {
                 // 获取参数值列表
@@ -312,15 +358,24 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 for (AnyObjectContext param : params) {
                     args.add(this.visit(param));
                 }
+                variableModel.setId(args.size());
+                valueModel = scope.resolve(variableModel);
+
+                // 是否存在
+                if (valueModel == null) {
+                    throw parseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
+                }
+                // 内置模块函数
+                if (valueModel.isNativesFunction()) {
+                    return new ValueModel(valueModel.asNativesFunction().invoke(args));
+                }
 
                 // 确保为函数
                 if (valueModel.isFunction()) {
                     valueModel = valueModel.asFunction().invoke(args);
-                } else {
-                    throw parseException(ctx.start, ctx.IDENTIFIER() + " 不是一个函数");
                 }
             }
-        }
+//        }
         return valueModel;
     }
 
@@ -340,8 +395,8 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             valueModel = resolveIndexes(valueModel, ctx.indexes());
         }
         // 为函数
-        if (valueModel.isFunction()) {
-            // 函数是否有参数并调用
+//        if (valueModel.isFunction() || valueModel.isNativesFunction()) {
+            // 函数
             if (ctx.implicitParameter() != null) {
                 // 遍历参数
                 for (ImplicitParameterContext implicitParameterContext : ctx.implicitParameter()) {
@@ -351,8 +406,13 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                     for (AnyObjectContext param : params) {
                         args.add(this.visit(param));
                     }
-                    // 确保为函数
-                    if (valueModel.isFunction()) {
+                    variableModel.setId(args.size());
+                    variableModel.setType(ModelType.function);
+                    valueModel = scope.resolve(variableModel);
+                    // 内置模块函数
+                    if (valueModel.isNativesFunction()) {
+                        return new ValueModel(valueModel.asNativesFunction().invoke(args));
+                    }else if (valueModel.isFunction()) {
                         // 调用
                         valueModel = valueModel.asFunction().invoke(args);
                     } else {
@@ -360,7 +420,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                     }
                 }
             }
-        }
+//        }
         return valueModel;
     }
 
@@ -389,9 +449,12 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 // 如果此元素为对象类型时继续进入，否则无法继续访问子元素
                 if (valueModel.isObjectModel()) {
                     // 获取对象中的某个元素
-                    valueModel = (ValueModel) valueModel.asObjectModel().get(routeNameContext.IDENTIFIER().getText());
+//                    System.out.println(routeNameContext.IDENTIFIER().getText() + routeNameContext.implicitParameter().size());
+                    VariableModel var = new VariableModel(routeNameContext.IDENTIFIER().getText());
+                    valueModel = valueModel.asObjectModel().getValue(var);
+
                     // 判断这个元素是否是函数
-                    if (valueModel.isFunction()) {
+                    if (valueModel.isFunction() || valueModel.isNativesFunction()) {
                         // 函数有无参数
                         if (routeNameContext.implicitParameter() != null) {
                             // 遍历参数列表
@@ -401,15 +464,18 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                                 for (AnyObjectContext param : params) {
                                     args.add(this.visit(param));
                                 }
-                                // 如果是函数则调用并赋值返回值，如果在下次循环中不是函数则报错
-                                if (valueModel.isFunction()) {
+
+                                // 内置模块函数
+                                if (valueModel.isNativesFunction()) {
+                                    return new ValueModel(valueModel.asNativesFunction().invoke(args));
+                                }else if (valueModel.isFunction()) {
+                                    // 如果是函数则调用并赋值返回值，如果在下次循环中不是函数则报错
                                     valueModel = valueModel.asFunction().invoke(args);
                                 } else {
                                     throw parseException(ctx.start, ctx.getText() + " 不是一个函数");
                                 }
                             }
                         }
-                        return valueModel;
                     }
                 } else {
                     throw parseException(ctx.start, routeNameContext.IDENTIFIER() + " 无法读取此未知对象");
@@ -431,8 +497,10 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         // 遍历键值添加进对象中
         for (ObjectKeyValueContext objectKeyValueContext : ctx.objectKeyValue()) {
             String key = objectKeyValueContext.IDENTIFIER().getText();
+            VariableModel variableModel = new VariableModel(key);
+            variableModel.setType(ModelType.Object);
             ValueModel value = this.visit(objectKeyValueContext.anyObject());
-            objectModel.put(key, value);
+            objectModel.put(variableModel, value);
         }
         return new ValueModel(objectModel);
     }

@@ -18,7 +18,6 @@ IN      : '在';
 NULL    : '空';
 PRINT   : '打印';
 PRINTLN : '打印换行';
-INPUT   : '输入';
 SIZE    : '长度';
 TRUE    : '真';
 FALSE   : '假';

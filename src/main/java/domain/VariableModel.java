@@ -13,6 +13,8 @@ public class VariableModel {
      *  键值
      *  */
     private String key;
+
+    private int id = 0;
     /**
      * 变量类型 默认 值类型
      */
@@ -24,6 +26,9 @@ public class VariableModel {
 
     public void setKey(String key) {
         this.key = key;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getKey() {
@@ -44,11 +49,16 @@ public class VariableModel {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VariableModel that = (VariableModel) o;
-        return Objects.equals(key, that.key);
+        return Objects.equals(key, that.key) && Objects.equals(id,that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key);
+        return Objects.hash(key + id);
+    }
+
+    @Override
+    public String toString() {
+        return getKey();
     }
 }

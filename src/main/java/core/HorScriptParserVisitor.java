@@ -29,6 +29,18 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExportInst(HorScriptParser.ExportInstContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#exportElements}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExportElements(HorScriptParser.ExportElementsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link HorScriptParser#exportElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExportElement(HorScriptParser.ExportElementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link HorScriptParser#blockSet}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -281,13 +293,6 @@ public interface HorScriptParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSizeFunctionCall(HorScriptParser.SizeFunctionCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code inputFunctionCall}
-	 * labeled alternative in {@link HorScriptParser#systemFunction}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInputFunctionCall(HorScriptParser.InputFunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code postSelfExpr}
 	 * labeled alternative in {@link HorScriptParser#selfExpr}.

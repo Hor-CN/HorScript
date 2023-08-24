@@ -67,16 +67,23 @@ public class Function {
         for (TerminalNode param : this.params) {
             params.add(param.getText());
         }
-
+        String param =  params.isEmpty() ? "无" : String.join(",", params);
 
         if (this.Identifier != null) {
 
-            return "函数" + Identifier + " (" + String.join(",",params) + ") {\n" +
-                    block.getText() + "\n}";
+//            return "函数" + Identifier + " (" + String.join(",",params) + ") {\n" +
+//                    block.getText() + "\n}";
+
+            return "<函数:" + hashCode() + " 参数:"+ param +">";
+
         }
-        return "(" +
-                String.join(",",params) + //str -> a,b,c +
-                ") => { " + block.getText() +
-                " }";
+//        return "(" +
+//                String.join(",",params) + //str -> a,b,c +
+//                ") => { " + block.getText() +
+//                " }";
+
+        return "<匿名函数:" + hashCode() + " 参数:"+ param + ">";
+
+
     }
 }
