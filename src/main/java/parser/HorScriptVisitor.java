@@ -146,7 +146,7 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
             if (sx.functionDecl() != null) {
                 Stack.add(sx);
             }
-            // 提升前缀变量声明
+            // 提升无前缀变量声明
             else if (sx.noAssignment() != null) {
                 Stack1.add(sx);
             }
@@ -449,34 +449,42 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
                 // 如果此元素为对象类型时继续进入，否则无法继续访问子元素
                 if (valueModel.isObjectModel()) {
                     // 获取对象中的某个元素
-//                    System.out.println(routeNameContext.IDENTIFIER().getText() + routeNameContext.implicitParameter().size());
                     VariableModel var = new VariableModel(routeNameContext.IDENTIFIER().getText());
-                    valueModel = valueModel.asObjectModel().getValue(var);
 
-                    // 判断这个元素是否是函数
-                    if (valueModel.isFunction() || valueModel.isNativesFunction()) {
-                        // 函数有无参数
-                        if (routeNameContext.implicitParameter() != null) {
-                            // 遍历参数列表
-                            for (ImplicitParameterContext implicitParameterContext : routeNameContext.implicitParameter()) {
-                                List<AnyObjectContext> params = this.visit(implicitParameterContext).asImplicitParameter();
-                                List<ValueModel> args = new ArrayList<>(params.size());
-                                for (AnyObjectContext param : params) {
-                                    args.add(this.visit(param));
-                                }
+                    // 为函数调用
+                    if (routeNameContext.implicitParameter() != null) {
+                        // 遍历参数列表
+                        for (ImplicitParameterContext implicitParameterContext : routeNameContext.implicitParameter()) {
+                            List<AnyObjectContext> params = this.visit(implicitParameterContext).asImplicitParameter();
+                            List<ValueModel> args = new ArrayList<>(params.size());
+                            for (AnyObjectContext param : params) {
+                                args.add(this.visit(param));
+                            }
+                            var.setId(args.size());
+                            var.setType(ModelType.function);
+                            valueModel = valueModel.asObjectModel().getValue(var);
 
-                                // 内置模块函数
-                                if (valueModel.isNativesFunction()) {
-                                    return new ValueModel(valueModel.asNativesFunction().invoke(args));
-                                }else if (valueModel.isFunction()) {
-                                    // 如果是函数则调用并赋值返回值，如果在下次循环中不是函数则报错
-                                    valueModel = valueModel.asFunction().invoke(args);
-                                } else {
-                                    throw parseException(ctx.start, ctx.getText() + " 不是一个函数");
-                                }
+                            // 内置模块函数
+                            if (valueModel.isNativesFunction()) {
+                                return new ValueModel(valueModel.asNativesFunction().invoke(args));
+                            }else if (valueModel.isFunction()) {
+                                // 如果是函数则调用并赋值返回值，如果在下次循环中不是函数则报错
+                                valueModel = valueModel.asFunction().invoke(args);
+                            } else {
+                                throw parseException(ctx.start, ctx.getText() + " 不是一个函数");
                             }
                         }
                     }
+                    if (valueModel.isObjectModel()) {
+                        valueModel = valueModel.asObjectModel().getValue(var);
+                    }
+//                    // 判断这个元素是否是函数
+//                    if (valueModel.isFunction() || valueModel.isNativesFunction()) {
+//                        // 函数有无参数
+//                        if (routeNameContext.implicitParameter() != null) {
+//
+//                        }
+//                    }
                 } else {
                     throw parseException(ctx.start, routeNameContext.IDENTIFIER() + " 无法读取此未知对象");
                 }
@@ -587,8 +595,11 @@ public class HorScriptVisitor extends HorScriptParserBaseVisitor<ValueModel> {
         }
         if (radixNumber != null) {
             // 转换为Long
-            Long bigInt = new Long(radixNumber);
-            return vm.setValue(bigInt);
+            if (radixNumber.length() < 2147483647) {
+                return new ValueModel(new Integer(radixNumber));
+            }else {
+                return new ValueModel(new Long(radixNumber));
+            }
         } else {
             // 小数转换为BigDecimal
             BigDecimal bigDec = new BigDecimal(decimalNode.getText());

@@ -53,7 +53,12 @@ public class NativeFunction {
                 return method.invoke(null);
             }
             // 使用反射机制调用静态方法
-            return method.invoke(null, args);
+
+            Object[] argValues = new Object[args.size()];
+            for (int i = 0; i < args.size(); i++) {
+                argValues[i] = args.get(i).asOv();
+            }
+            return method.invoke(null, argValues);
         } catch (Exception e) {
             // 在调用出现异常时捕获并处理
              throw new RuntimeException("内置函数错误: " + name + "，原因：" + e.getMessage());
