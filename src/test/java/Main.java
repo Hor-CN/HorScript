@@ -1,4 +1,4 @@
-import parser.HorScript;
+import cn.itbk.horscript.parser.HorScript;
 
 import java.io.File;
 
@@ -9,8 +9,9 @@ import java.io.File;
  */
 public class Main {
     public static void main(String[] args) {
-        File n = new File("src/test/java/例子/内置模块/随机模块.hs");
+        File n = new File("src/test/java/例子/内置模块/系统模块.hs");
         HorScript horScript = new HorScript();
         horScript.parserCode(n);
+
     }
 }
